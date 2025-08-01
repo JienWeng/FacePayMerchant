@@ -19,6 +19,7 @@ struct FaceRegistrationView: View {
     @State private var showSuccess = false
     @State private var livenessDetected = false
     @State private var faceQuality: Float = 0.0
+    @State private var showResult = false
     
     var body: some View {
         ZStack {
@@ -42,11 +43,6 @@ struct FaceRegistrationView: View {
                 
                 // Face circle overlay
                 ZStack {
-                    // Outer circle
-                    Circle()
-                        .stroke(Color.white.opacity(0.5), lineWidth: 3)
-                        .frame(width: 280, height: 280)
-                    
                     // Progress circle
                     Circle()
                         .trim(from: 0, to: progress)
@@ -57,6 +53,14 @@ struct FaceRegistrationView: View {
                         .frame(width: 280, height: 280)
                         .rotationEffect(.degrees(-90))
                         .animation(.easeInOut(duration: 0.3), value: progress)
+
+                    // Center icon
+                    Image(systemName: getCenterIcon())
+                        .font(.system(size: 40, weight: .semibold))
+                        .foregroundColor(getIconColor())
+                        .scaleEffect(showResult ? 1.2 : 1.0)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.6), value: showResult)
+                
                     
                     // Quality indicator
                     if faceQuality > 0 {
@@ -136,6 +140,26 @@ struct FaceRegistrationView: View {
         progress = 0.0
         livenessDetected = false
         statusMessage = "Position your face in the circle"
+    }
+    
+    private func getCenterIcon() -> String {
+        if showSuccess {
+            return "checkmark.circle.fill"
+        } else if showResult {
+            return "xmark.circle.fill"
+        } else {
+            return "person.crop.circle.badge.exclamationmark"
+        }
+    }
+    
+    private func getIconColor() -> Color {
+        if showSuccess {
+            return .green
+        } else if showResult {
+            return .red
+        } else {
+            return .white
+        }
     }
 }
 
@@ -385,6 +409,7 @@ class FaceCameraViewController: UIViewController {
                 
                 self.previewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
                 self.previewLayer?.videoGravity = .resizeAspectFill
+                self.previewLayer?.connection?.videoOrientation = self.getVideoOrientation()
                 self.previewLayer?.frame = self.view.bounds
                 
                 self.view.layer.insertSublayer(self.previewLayer!, at: 0)
@@ -401,6 +426,21 @@ class FaceCameraViewController: UIViewController {
             
         } catch {
             print("Error setting up face registration camera: \(error)")
+        }
+    }
+    
+    private func getVideoOrientation() -> AVCaptureVideoOrientation {
+        switch UIDevice.current.orientation {
+        case .portrait:
+            return .portrait
+        case .landscapeLeft:
+            return .landscapeRight // Yes, it's inverted
+        case .landscapeRight:
+            return .landscapeLeft
+        case .portraitUpsideDown:
+            return .portraitUpsideDown
+        default:
+            return .portrait
         }
     }
 }

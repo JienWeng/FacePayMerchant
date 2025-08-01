@@ -74,8 +74,24 @@ class ICCameraViewController: UIViewController {
         
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
         previewLayer.videoGravity = .resizeAspectFill
+        previewLayer.connection?.videoOrientation = getVideoOrientation()
         previewLayer.frame = view.layer.bounds
         view.layer.addSublayer(previewLayer)
+    }
+    
+    private func getVideoOrientation() -> AVCaptureVideoOrientation {
+        switch UIDevice.current.orientation {
+        case .portrait:
+            return .portrait
+        case .landscapeLeft:
+            return .landscapeRight // Yes, it's inverted
+        case .landscapeRight:
+            return .landscapeLeft
+        case .portraitUpsideDown:
+            return .portraitUpsideDown
+        default:
+            return .portrait
+        }
     }
     
     private func setupUI() {
@@ -211,6 +227,12 @@ class ICCameraViewController: UIViewController {
     @objc private func capturePhoto() {
         showLoading()
         let settings = AVCapturePhotoSettings()
+        
+        // Set the correct orientation for the photo
+        if let photoOutputConnection = photoOutput.connection(with: .video) {
+            photoOutputConnection.videoOrientation = getVideoOrientation()
+        }
+        
         photoOutput.capturePhoto(with: settings, delegate: self)
     }
     

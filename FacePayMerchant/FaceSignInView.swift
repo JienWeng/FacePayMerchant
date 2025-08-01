@@ -43,12 +43,6 @@ struct FaceSignInView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipped()
             
-            // Face detection frame overlay
-            Circle()
-                .stroke(Color.white.opacity(0.8), lineWidth: 3)
-                .frame(width: 200, height: 200)
-                .position(x: UIScreen.main.bounds.width / 2, y: UIScreen.main.bounds.height / 2 - 50)
-            
             // Overlay UI
             VStack {
                 Spacer()
@@ -430,6 +424,7 @@ class FaceAuthViewController: UIViewController {
                 
                 self.previewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
                 self.previewLayer?.videoGravity = .resizeAspectFill
+                self.previewLayer?.connection?.videoOrientation = self.getVideoOrientation()
                 self.previewLayer?.frame = self.view.bounds
                 
                 // Ensure the preview layer is at the bottom of the view hierarchy
@@ -451,6 +446,21 @@ class FaceAuthViewController: UIViewController {
             
         } catch {
             print("Error setting up camera: \(error)")
+        }
+    }
+    
+    private func getVideoOrientation() -> AVCaptureVideoOrientation {
+        switch UIDevice.current.orientation {
+        case .portrait:
+            return .portrait
+        case .landscapeLeft:
+            return .landscapeRight // Yes, it's inverted
+        case .landscapeRight:
+            return .landscapeLeft
+        case .portraitUpsideDown:
+            return .portraitUpsideDown
+        default:
+            return .portrait
         }
     }
 }
