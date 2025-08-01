@@ -14,73 +14,81 @@ struct OnboardingView: View {
     @StateObject private var userManager = UserManager()
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                Color.white
-                    .ignoresSafeArea()
-                
-                VStack(spacing: 30) {
-                    // Header
-                    HStack {
-                        Button(action: {
-                            if currentStep > 0 {
-                                currentStep -= 1
-                            } else {
-                                dismiss()
+        GeometryReader { geometry in
+            NavigationView {
+                ZStack {
+                    Color.white
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 20) {
+                        // Header - Optimized for landscape
+                        HStack {
+                            Button(action: {
+                                if currentStep > 0 {
+                                    currentStep -= 1
+                                } else {
+                                    dismiss()
+                                }
+                            }) {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(.black)
                             }
-                        }) {
+                            
+                            Spacer()
+                            
+                            Text("Merchant Setup")
+                                .font(.system(size: 20, weight: .semibold, design: .default))
+                                .foregroundColor(.black)
+                            
+                            Spacer()
+                            
+                            // Invisible placeholder for alignment
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.black)
+                                .foregroundColor(.clear)
+                        }
+                        .padding(.horizontal, geometry.size.width * 0.05)
+                        
+                        // Progress indicator - Compact for landscape
+                        HStack(spacing: 6) {
+                            ForEach(0..<7) { index in
+                                Circle()
+                                    .fill(index <= currentStep ? Color.primaryYellow : Color.gray.opacity(0.3))
+                                    .frame(width: 8, height: 8)
+                            }
                         }
                         
-                        Spacer()
-                        
-                        Text("Setup")
-                            .font(.system(size: 20, weight: .semibold, design: .default))
-                            .foregroundColor(.black)
-                        
-                        Spacer()
-                        
-                        // Invisible placeholder for alignment
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.clear)
-                    }
-                    .padding(.horizontal, 20)
-                    
-                    // Progress indicator
-                    HStack(spacing: 8) {
-                        ForEach(0..<5) { index in
-                            Circle()
-                                .fill(index <= currentStep ? Color.primaryYellow : Color.gray.opacity(0.3))
-                                .frame(width: 10, height: 10)
+                        // Content based on current step - Optimized layout
+                        Group {
+                            switch currentStep {
+                            case 0:
+                                ICWelcomeStep(onNext: { currentStep = 1 })
+                            case 1:
+                                ICScanStep(onNext: { currentStep = 2 })
+                            case 2:
+                                FaceRegistrationStep(onNext: { currentStep = 3 })
+                            case 3:
+                                BusinessNameStep(onNext: { currentStep = 4 })
+                            case 4:
+                                PhoneNumberStep(onNext: { currentStep = 5 })
+                            case 5:
+                                EmailStep(onNext: { currentStep = 6 })
+                            default:
+                                CompletionStep(onComplete: {
+                                    showingDashboard = true
+                                })
+                            }
                         }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
-                    
-                    // Content based on current step
-                    switch currentStep {
-                    case 0:
-                        ICWelcomeStep(onNext: { currentStep = 1 })
-                    case 1:
-                        ICScanStep(onNext: { currentStep = 2 })
-                    case 2:
-                        FaceRegistrationStep(onNext: { currentStep = 3 })
-                    case 3:
-                        PhoneNumberStep(onNext: { currentStep = 4 })
-                    default:
-                        CompletionStep(onComplete: {
-                            showingDashboard = true
-                        })
-                    }
-                    
-                    Spacer()
+                    .padding(.vertical, 10)
                 }
             }
-        }
-        .navigationBarHidden(true)
-        .fullScreenCover(isPresented: $showingDashboard) {
-            DashboardView(userManager: userManager)
+            .navigationBarHidden(true)
+            .fullScreenCover(isPresented: $showingDashboard) {
+                DashboardView(userManager: userManager)
+            }
         }
     }
 }
@@ -139,44 +147,58 @@ struct ICWelcomeStep: View {
     let onNext: () -> Void
     
     var body: some View {
-        VStack(spacing: 40) {
-            Spacer()
-            
-            // Icon
-            Image(systemName: "person.text.rectangle")
-                .font(.system(size: 80, weight: .black))
-                .foregroundColor(.primaryYellow)
-            
-            // Title and description
-            VStack(spacing: 16) {
-                Text("Scan Your IC")
-                    .font(.system(size: 28, weight: .bold, design: .default))
-                    .foregroundColor(.black)
+        GeometryReader { geometry in
+            HStack(spacing: 40) {
+                // Left side - Content
+                VStack(spacing: 30) {
+                    Spacer()
+                    
+                    // Icon
+                    Image(systemName: "person.text.rectangle")
+                        .font(.system(size: 60, weight: .black))
+                        .foregroundColor(.primaryYellow)
+                    
+                    // Title and description
+                    VStack(spacing: 16) {
+                        Text("Scan Your IC")
+                            .font(.system(size: 28, weight: .bold, design: .default))
+                            .foregroundColor(.black)
+                        
+                        Text("We'll scan your identification card to verify your identity")
+                            .font(.system(size: 16, weight: .medium, design: .default))
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                    }
+                    
+                    Spacer()
+                }
+                .frame(width: geometry.size.width * 0.5)
                 
-                Text("We'll scan your identification card to verify your identity")
-                    .font(.system(size: 16, weight: .medium, design: .default))
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
+                // Right side - Action
+                VStack {
+                    Spacer()
+                    
+                    Button(action: onNext) {
+                        Text("Continue")
+                            .font(.system(size: 18, weight: .bold, design: .default))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                            .background(Color.primaryYellow)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.black, lineWidth: 3)
+                            )
+                            .cornerRadius(12)
+                    }
+                    .frame(width: geometry.size.width * 0.3)
+                    
+                    Spacer()
+                }
+                
+                Spacer()
             }
-            
-            Spacer()
-            
-            // Continue button
-            Button(action: onNext) {
-                Text("Continue")
-                    .font(.system(size: 18, weight: .bold, design: .default))
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(Color.primaryYellow)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.black, lineWidth: 3)
-                    )
-                    .cornerRadius(12)
-            }
-            .padding(.horizontal, 32)
+            .padding(.horizontal, 40)
         }
     }
 }

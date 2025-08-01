@@ -10,84 +10,56 @@ import SwiftUI
 class UserManager: ObservableObject {
     @Published var currentUser: User
     @Published var isSignedIn: Bool = false
-    @Published var userCards: [CardData] = []
     
     private let userDefaults = UserDefaults.standard
     private let userNameKey = "SavedUserName"
     private let icNumberKey = "SavedICNumber"
     private let phoneNumberKey = "SavedPhoneNumber"
-    private let userCardsKey = "SavedUserCards"
+    private let businessNameKey = "SavedBusinessName"
+    private let emailKey = "SavedEmail"
     
     init() {
         let savedName = userDefaults.string(forKey: userNameKey) ?? "User"
         let savedICNumber = userDefaults.string(forKey: icNumberKey) ?? ""
         let savedPhoneNumber = userDefaults.string(forKey: phoneNumberKey) ?? ""
-        self.currentUser = User(name: savedName, faceData: nil, icNumber: savedICNumber, phoneNumber: savedPhoneNumber)
-        self.loadUserCards()
+        let savedBusinessName = userDefaults.string(forKey: businessNameKey) ?? ""
+        let savedEmail = userDefaults.string(forKey: emailKey) ?? ""
+        self.currentUser = User(name: savedName, faceData: nil, icNumber: savedICNumber, phoneNumber: savedPhoneNumber, businessName: savedBusinessName, email: savedEmail)
     }
     
     func loadUserData() {
         let savedName = userDefaults.string(forKey: userNameKey) ?? "User"
         let savedICNumber = userDefaults.string(forKey: icNumberKey) ?? ""
         let savedPhoneNumber = userDefaults.string(forKey: phoneNumberKey) ?? ""
-        currentUser = User(name: savedName, faceData: currentUser.faceData, icNumber: savedICNumber, phoneNumber: savedPhoneNumber)
-        loadUserCards()
+        let savedBusinessName = userDefaults.string(forKey: businessNameKey) ?? ""
+        let savedEmail = userDefaults.string(forKey: emailKey) ?? ""
+        currentUser = User(name: savedName, faceData: currentUser.faceData, icNumber: savedICNumber, phoneNumber: savedPhoneNumber, businessName: savedBusinessName, email: savedEmail)
     }
     
     func updateUserName(_ name: String) {
-        currentUser = User(name: name, faceData: currentUser.faceData, icNumber: currentUser.icNumber, phoneNumber: currentUser.phoneNumber)
+        currentUser = User(name: name, faceData: currentUser.faceData, icNumber: currentUser.icNumber, phoneNumber: currentUser.phoneNumber, businessName: currentUser.businessName, email: currentUser.email)
         userDefaults.set(name, forKey: userNameKey)
     }
     
     func updateUserFromIC(name: String, icNumber: String) {
-        currentUser = User(name: name, faceData: currentUser.faceData, icNumber: icNumber, phoneNumber: currentUser.phoneNumber)
+        currentUser = User(name: name, faceData: currentUser.faceData, icNumber: icNumber, phoneNumber: currentUser.phoneNumber, businessName: currentUser.businessName, email: currentUser.email)
         userDefaults.set(name, forKey: userNameKey)
         userDefaults.set(icNumber, forKey: icNumberKey)
     }
     
     func updatePhoneNumber(_ phoneNumber: String) {
-        currentUser = User(name: currentUser.name, faceData: currentUser.faceData, icNumber: currentUser.icNumber, phoneNumber: phoneNumber)
+        currentUser = User(name: currentUser.name, faceData: currentUser.faceData, icNumber: currentUser.icNumber, phoneNumber: phoneNumber, businessName: currentUser.businessName, email: currentUser.email)
         userDefaults.set(phoneNumber, forKey: phoneNumberKey)
     }
     
-    // Card management functions
-    func addCard(_ card: CardData) {
-        // Associate card with current user by IC number
-        var cardWithUserInfo = card
-        cardWithUserInfo.holderName = currentUser.name
-        userCards.append(cardWithUserInfo)
-        saveUserCards()
+    func updateBusinessName(_ businessName: String) {
+        currentUser = User(name: currentUser.name, faceData: currentUser.faceData, icNumber: currentUser.icNumber, phoneNumber: currentUser.phoneNumber, businessName: businessName, email: currentUser.email)
+        userDefaults.set(businessName, forKey: businessNameKey)
     }
     
-    func removeCard(at index: Int) {
-        guard index < userCards.count else { return }
-        userCards.remove(at: index)
-        saveUserCards()
-    }
-    
-    private func loadUserCards() {
-        if let data = userDefaults.data(forKey: userCardsKey),
-           let cards = try? JSONDecoder().decode([CardData].self, from: data) {
-            // Filter cards for current user (by IC number or name)
-            userCards = cards.filter { card in
-                return card.holderName == currentUser.name || 
-                       (currentUser.icNumber.isEmpty == false && card.userICNumber == currentUser.icNumber)
-            }
-        }
-    }
-    
-    private func saveUserCards() {
-        // Add user identification to cards before saving
-        let cardsWithUserInfo = userCards.map { card in
-            var updatedCard = card
-            updatedCard.userICNumber = currentUser.icNumber
-            updatedCard.holderName = currentUser.name
-            return updatedCard
-        }
-        
-        if let data = try? JSONEncoder().encode(cardsWithUserInfo) {
-            userDefaults.set(data, forKey: userCardsKey)
-        }
+    func updateEmail(_ email: String) {
+        currentUser = User(name: currentUser.name, faceData: currentUser.faceData, icNumber: currentUser.icNumber, phoneNumber: currentUser.phoneNumber, businessName: currentUser.businessName, email: email)
+        userDefaults.set(email, forKey: emailKey)
     }
     
     func signIn() {
@@ -96,7 +68,6 @@ class UserManager: ObservableObject {
     
     func signOut() {
         isSignedIn = false
-        userCards = []
     }
 }
 
@@ -105,4 +76,6 @@ struct User {
     var faceData: Data?
     let icNumber: String
     let phoneNumber: String
+    let businessName: String
+    let email: String
 }

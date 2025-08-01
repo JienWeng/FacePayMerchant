@@ -1,16 +1,16 @@
 //
-//  PhoneNumberStep.swift
-//  FacePayMobile
+//  EmailStep.swift
+//  FacePayMerchant
 //
-//  Created by Lai Jien Weng on 31/07/2025.
+//  Created by Lai Jien Weng on 01/08/2025.
 //
 
 import SwiftUI
 
-struct PhoneNumberStep: View {
+struct EmailStep: View {
     let onNext: () -> Void
-    @State private var phoneNumber: String = ""
-    @FocusState private var isPhoneNumberFocused: Bool
+    @State private var email: String = ""
+    @FocusState private var isEmailFocused: Bool
     @StateObject private var userManager = UserManager()
     
     var body: some View {
@@ -21,23 +21,23 @@ struct PhoneNumberStep: View {
                     Spacer()
                     
                     // Icon
-                    Image(systemName: "phone.fill")
+                    Image(systemName: "envelope.fill")
                         .font(.system(size: 60, weight: .black))
                         .foregroundColor(.primaryYellow)
                     
                     // Title and description  
                     VStack(spacing: 16) {
-                        Text("Phone Number")
+                        Text("Email Address")
                             .font(.system(size: 28, weight: .bold, design: .default))
                             .foregroundColor(.black)
                         
                         if !userManager.currentUser.name.isEmpty {
-                            Text("Hi \(userManager.currentUser.name)! Please enter your phone number")
+                            Text("Hi \(userManager.currentUser.name)! Please enter your email address")
                                 .font(.system(size: 16, weight: .medium, design: .default))
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
                         } else {
-                            Text("Please enter your phone number")
+                            Text("Please enter your email address")
                                 .font(.system(size: 16, weight: .medium, design: .default))
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
@@ -52,30 +52,31 @@ struct PhoneNumberStep: View {
                 VStack(spacing: 40) {
                     Spacer()
                     
-                    // Phone number input
+                    // Email input
                     VStack(spacing: 8) {
-                        TextField("", text: $phoneNumber)
-                            .placeholder(when: phoneNumber.isEmpty) {
-                                Text("Phone number")
+                        TextField("", text: $email)
+                            .placeholder(when: email.isEmpty) {
+                                Text("Email address")
                                     .font(.system(size: 18, weight: .medium, design: .default))
                                     .foregroundColor(.gray.opacity(0.6))
                             }
                             .font(.system(size: 18, weight: .semibold, design: .default))
                             .foregroundColor(.black)
-                            .keyboardType(.phonePad)
-                            .focused($isPhoneNumberFocused)
-                            .textContentType(.telephoneNumber)
+                            .keyboardType(.emailAddress)
+                            .autocapitalization(.none)
+                            .focused($isEmailFocused)
+                            .textContentType(.emailAddress)
                         
                         Rectangle()
-                            .fill(isPhoneNumberFocused ? Color.primaryYellow : Color.gray.opacity(0.3))
+                            .fill(isEmailFocused ? Color.primaryYellow : Color.gray.opacity(0.3))
                             .frame(height: 2)
-                            .animation(.easeInOut(duration: 0.2), value: isPhoneNumberFocused)
+                            .animation(.easeInOut(duration: 0.2), value: isEmailFocused)
                     }
                     
                     // Continue button
                     Button(action: {
-                        // Save the phone number and proceed
-                        userManager.updatePhoneNumber(phoneNumber)
+                        // Save the email and proceed
+                        userManager.updateEmail(email)
                         onNext()
                     }) {
                         HStack {
@@ -91,14 +92,14 @@ struct PhoneNumberStep: View {
                         .padding(.vertical, 16)
                         .background(
                             RoundedRectangle(cornerRadius: 12)
-                                .fill(phoneNumber.isValidPhoneNumber ? Color.primaryYellow : Color.gray.opacity(0.3))
+                                .fill(email.isValidEmail ? Color.primaryYellow : Color.gray.opacity(0.3))
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(Color.black, lineWidth: 3)
                         )
                     }
-                    .disabled(!phoneNumber.isValidPhoneNumber)
+                    .disabled(!email.isValidEmail)
                     
                     Spacer()
                 }
@@ -109,7 +110,7 @@ struct PhoneNumberStep: View {
             .padding(.horizontal, 40)
         }
         .onTapGesture {
-            isPhoneNumberFocused = false
+            isEmailFocused = false
         }
         .onAppear {
             // Load existing user data when view appears
@@ -119,25 +120,12 @@ struct PhoneNumberStep: View {
 }
 
 extension String {
-    var isValidPhoneNumber: Bool {
-        let phoneRegex = #"^[\+]?[0-9\-\(\)\s]{8,15}$"#
-        return NSPredicate(format: "SELF MATCHES %@", phoneRegex).evaluate(with: self)
-    }
-}
-
-extension View {
-    func placeholder<Content: View>(
-        when shouldShow: Bool,
-        alignment: Alignment = .leading,
-        @ViewBuilder placeholder: () -> Content) -> some View {
-
-        ZStack(alignment: alignment) {
-            placeholder().opacity(shouldShow ? 1 : 0)
-            self
-        }
+    var isValidEmail: Bool {
+        let emailRegex = #"^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
+        return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(with: self)
     }
 }
 
 #Preview {
-    PhoneNumberStep(onNext: {})
+    EmailStep(onNext: {})
 }

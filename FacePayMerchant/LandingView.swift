@@ -1,8 +1,8 @@
 //
 //  LandingView.swift
-//  FacePayMobile
+//  FacePayMerchant
 //
-//  Created by Lai Jien Weng on 31/07/2025.
+//  Created by Lai Jien Weng on 01/08/2025.
 //
 
 import SwiftUI
@@ -86,7 +86,7 @@ struct LandingView: View {
                 }
             }
             
-            VStack(spacing: 40) {
+            VStack(spacing: 30) {
                 Spacer()
                 
                 // Logo - Face ID
@@ -107,12 +107,13 @@ struct LandingView: View {
                     Text("The Easiest Way To Run Your Business")
                         .font(.system(size: 18, weight: .semibold, design: .default))
                         .foregroundColor(.black)
+                        .multilineTextAlignment(.center)
                 }
                 
                 Spacer()
                 
-                // Action buttons
-                VStack(spacing: 16) {
+                // Action buttons - Optimized for landscape
+                HStack(spacing: 20) {
                     Button(action: {
                         showOnboarding = true
                     }) {
@@ -145,7 +146,7 @@ struct LandingView: View {
                             .cornerRadius(12)
                     }
                 }
-                .padding(.horizontal, 32)
+                .padding(.horizontal, 100)
                 
                 Spacer()
             }

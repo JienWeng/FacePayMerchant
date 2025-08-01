@@ -1,16 +1,16 @@
 //
-//  PhoneNumberStep.swift
-//  FacePayMobile
+//  BusinessNameStep.swift
+//  FacePayMerchant
 //
-//  Created by Lai Jien Weng on 31/07/2025.
+//  Created by Lai Jien Weng on 01/08/2025.
 //
 
 import SwiftUI
 
-struct PhoneNumberStep: View {
+struct BusinessNameStep: View {
     let onNext: () -> Void
-    @State private var phoneNumber: String = ""
-    @FocusState private var isPhoneNumberFocused: Bool
+    @State private var businessName: String = ""
+    @FocusState private var isBusinessNameFocused: Bool
     @StateObject private var userManager = UserManager()
     
     var body: some View {
@@ -21,23 +21,23 @@ struct PhoneNumberStep: View {
                     Spacer()
                     
                     // Icon
-                    Image(systemName: "phone.fill")
+                    Image(systemName: "building.2.fill")
                         .font(.system(size: 60, weight: .black))
                         .foregroundColor(.primaryYellow)
                     
                     // Title and description  
                     VStack(spacing: 16) {
-                        Text("Phone Number")
+                        Text("Business Name")
                             .font(.system(size: 28, weight: .bold, design: .default))
                             .foregroundColor(.black)
                         
                         if !userManager.currentUser.name.isEmpty {
-                            Text("Hi \(userManager.currentUser.name)! Please enter your phone number")
+                            Text("Hi \(userManager.currentUser.name)! Please enter your business name")
                                 .font(.system(size: 16, weight: .medium, design: .default))
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
                         } else {
-                            Text("Please enter your phone number")
+                            Text("Please enter your business name")
                                 .font(.system(size: 16, weight: .medium, design: .default))
                                 .foregroundColor(.gray)
                                 .multilineTextAlignment(.center)
@@ -52,30 +52,29 @@ struct PhoneNumberStep: View {
                 VStack(spacing: 40) {
                     Spacer()
                     
-                    // Phone number input
+                    // Business name input
                     VStack(spacing: 8) {
-                        TextField("", text: $phoneNumber)
-                            .placeholder(when: phoneNumber.isEmpty) {
-                                Text("Phone number")
+                        TextField("", text: $businessName)
+                            .placeholder(when: businessName.isEmpty) {
+                                Text("Business name")
                                     .font(.system(size: 18, weight: .medium, design: .default))
                                     .foregroundColor(.gray.opacity(0.6))
                             }
                             .font(.system(size: 18, weight: .semibold, design: .default))
                             .foregroundColor(.black)
-                            .keyboardType(.phonePad)
-                            .focused($isPhoneNumberFocused)
-                            .textContentType(.telephoneNumber)
+                            .focused($isBusinessNameFocused)
+                            .textContentType(.organizationName)
                         
                         Rectangle()
-                            .fill(isPhoneNumberFocused ? Color.primaryYellow : Color.gray.opacity(0.3))
+                            .fill(isBusinessNameFocused ? Color.primaryYellow : Color.gray.opacity(0.3))
                             .frame(height: 2)
-                            .animation(.easeInOut(duration: 0.2), value: isPhoneNumberFocused)
+                            .animation(.easeInOut(duration: 0.2), value: isBusinessNameFocused)
                     }
                     
                     // Continue button
                     Button(action: {
-                        // Save the phone number and proceed
-                        userManager.updatePhoneNumber(phoneNumber)
+                        // Save the business name and proceed
+                        userManager.updateBusinessName(businessName)
                         onNext()
                     }) {
                         HStack {
@@ -91,14 +90,14 @@ struct PhoneNumberStep: View {
                         .padding(.vertical, 16)
                         .background(
                             RoundedRectangle(cornerRadius: 12)
-                                .fill(phoneNumber.isValidPhoneNumber ? Color.primaryYellow : Color.gray.opacity(0.3))
+                                .fill(businessName.isValidBusinessName ? Color.primaryYellow : Color.gray.opacity(0.3))
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(Color.black, lineWidth: 3)
                         )
                     }
-                    .disabled(!phoneNumber.isValidPhoneNumber)
+                    .disabled(!businessName.isValidBusinessName)
                     
                     Spacer()
                 }
@@ -109,7 +108,7 @@ struct PhoneNumberStep: View {
             .padding(.horizontal, 40)
         }
         .onTapGesture {
-            isPhoneNumberFocused = false
+            isBusinessNameFocused = false
         }
         .onAppear {
             // Load existing user data when view appears
@@ -119,25 +118,11 @@ struct PhoneNumberStep: View {
 }
 
 extension String {
-    var isValidPhoneNumber: Bool {
-        let phoneRegex = #"^[\+]?[0-9\-\(\)\s]{8,15}$"#
-        return NSPredicate(format: "SELF MATCHES %@", phoneRegex).evaluate(with: self)
-    }
-}
-
-extension View {
-    func placeholder<Content: View>(
-        when shouldShow: Bool,
-        alignment: Alignment = .leading,
-        @ViewBuilder placeholder: () -> Content) -> some View {
-
-        ZStack(alignment: alignment) {
-            placeholder().opacity(shouldShow ? 1 : 0)
-            self
-        }
+    var isValidBusinessName: Bool {
+        return !self.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && self.count >= 2
     }
 }
 
 #Preview {
-    PhoneNumberStep(onNext: {})
+    BusinessNameStep(onNext: {})
 }
