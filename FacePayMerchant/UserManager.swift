@@ -38,6 +38,10 @@ class UserManager: ObservableObject {
         return transactions.reduce(0) { $0 + $1.amount }
     }
     
+    var availableBalance: Double {
+        return max(totalBalance, 0)
+    }
+    
     var weeklyRevenue: [Double] {
         let calendar = Calendar.current
         let today = Date()
@@ -87,6 +91,19 @@ class UserManager: ObservableObject {
             status: .completed
         )
         transactions.insert(transaction, at: 0) // Add to beginning
+        saveTransactions()
+    }
+    
+    func processWithdrawal(amount: Double) {
+        // Create a withdrawal transaction (negative amount)
+        let withdrawalTransaction = Transaction(
+            id: UUID().uuidString,
+            customerName: "Withdrawal",
+            amount: -amount,
+            date: Date(),
+            status: .completed
+        )
+        transactions.insert(withdrawalTransaction, at: 0) // Add to beginning
         saveTransactions()
     }
     

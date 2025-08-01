@@ -33,10 +33,10 @@ struct DashboardView: View {
                     .ignoresSafeArea()
                 
                 if paymentState == .ready {
-                    // Main dashboard view
+                    // Main dashboard view with new layout
                     VStack(spacing: 0) {
-                        // Top header with business info
-                        VStack(spacing: 24) {
+                        // Top row - Financial cards only
+                        VStack(spacing: 20) {
                             // Business header
                             HStack {
                                 VStack(alignment: .leading, spacing: 8) {
@@ -51,99 +51,181 @@ struct DashboardView: View {
                                 
                                 Spacer()
                                 
-                                // Actions row
-                                HStack(spacing: 16) {
-                                    ActionButton(
-                                        icon: "list.bullet.rectangle",
-                                        title: "Transactions",
-                                        action: { showingTransactions = true }
-                                    )
-                                    
-                                    ActionButton(
-                                        icon: "banknote",
-                                        title: "Withdrawals",
-                                        action: { showingWithdrawals = true }
-                                    )
-                                    
-                                    Button(action: {
-                                        userManager.signOut()
-                                    }) {
-                                        Image(systemName: "rectangle.portrait.and.arrow.right")
-                                            .font(.system(size: 20, weight: .bold))
-                                            .foregroundColor(.gray)
-                                    }
+                                // Sign out button
+                                Button(action: {
+                                    userManager.signOut()
+                                }) {
+                                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                                        .font(.system(size: 20, weight: .bold))
+                                        .foregroundColor(.gray)
                                 }
                             }
                             
-                            // Financial overview cards
-                            HStack(spacing: 20) {
-                                // Balance Card
+                            // Top financial cards row
+                            HStack(spacing: 16) {
                                 FinancialCard(
                                     title: "Current Balance",
-                                    value: "$\(String(format: "%.2f", userManager.totalBalance))",
+                                    value: "$\(String(format: "%.2f", userManager.availableBalance))",
                                     subtitle: "Available",
                                     color: .primaryYellow,
                                     icon: "dollarsign.circle.fill"
                                 )
                                 
-                                // Today's Stats
-                                VStack(spacing: 20) {
-                                    FinancialCard(
-                                        title: "Today's Revenue",
-                                        value: "$\(String(format: "%.0f", userManager.todayRevenue))",
-                                        subtitle: "\(userManager.todayTransactionCount) transactions",
-                                        color: .green,
-                                        icon: "chart.line.uptrend.xyaxis"
-                                    )
-                                    
-                                    FinancialCard(
-                                        title: "Weekly Trend",
-                                        value: "+12.5%",
-                                        subtitle: "vs last week",
-                                        color: .blue,
-                                        icon: "arrow.up.right.circle.fill"
-                                    )
-                                }
-                            }
-                            
-                            // Weekly chart
-                            VStack(alignment: .leading, spacing: 16) {
-                                Text("Weekly Revenue")
-                                    .font(.system(size: 20, weight: .bold, design: .default))
-                                    .foregroundColor(.black)
+                                FinancialCard(
+                                    title: "Today's Revenue",
+                                    value: "$\(String(format: "%.0f", userManager.todayRevenue))",
+                                    subtitle: "\(userManager.todayTransactionCount) transactions",
+                                    color: .primaryYellow,
+                                    icon: "chart.line.uptrend.xyaxis"
+                                )
                                 
-                                WeeklyChart(data: userManager.weeklyRevenue)
-                                    .frame(height: 120)
+                                FinancialCard(
+                                    title: "Weekly Growth",
+                                    value: "+12.5%",
+                                    subtitle: "vs last week",
+                                    color: .primaryYellow,
+                                    icon: "arrow.up.right.circle.fill"
+                                )
+                                
+                                FinancialCard(
+                                    title: "Avg Transaction",
+                                    value: "$\(String(format: "%.0f", userManager.totalBalance / max(Double(userManager.transactions.count), 1)))",
+                                    subtitle: "per payment",
+                                    color: .primaryYellow,
+                                    icon: "creditcard.circle.fill"
+                                )
                             }
                         }
                         .padding(.horizontal, 40)
                         .padding(.top, 30)
                         
-                        Spacer()
+                        Spacer().frame(height: 40)
                         
-                        // Large pay button
-                        Button(action: {
-                            paymentState = .enteringAmount
-                        }) {
-                            HStack(spacing: 16) {
-                                Image(systemName: "dollarsign.circle.fill")
-                                    .font(.system(size: 36, weight: .bold))
-                                Text("Start Payment")
-                                    .font(.system(size: 28, weight: .bold, design: .default))
+                        // Bottom section - Chart on left, Actions on right
+                        HStack(alignment: .top, spacing: 40) {
+                            // Left side
+                            VStack(alignment: .leading, spacing: 20) {
+                                Text("Weekly Revenue")
+                                    .font(.system(size: 20, weight: .bold, design: .default))
+                                    .foregroundColor(.black)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                
+                                WeeklyChart(data: userManager.weeklyRevenue)
+                                    .frame(height: 240)
+                                    .frame(maxWidth: .infinity)
                             }
-                            .foregroundColor(.black)
-                            .frame(width: 280, height: 80)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 255)
+                            .padding(24)
                             .background(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(Color.primaryYellow)
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color.white)
+                                    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
                             )
                             .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.black, lineWidth: 4)
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color.black, lineWidth: 2)
                             )
-                            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                            
+                            // Right side - Action buttons
+                            VStack(spacing: 20) {
+                                // Large action buttons
+                                Button(action: { showingTransactions = true }) {
+                                    HStack(spacing: 16) {
+                                        Image(systemName: "list.bullet.rectangle")
+                                            .font(.system(size: 24, weight: .bold))
+                                        
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Transactions")
+                                                .font(.system(size: 18, weight: .bold, design: .default))
+                                            Text("\(userManager.transactions.count) payments")
+                                                .font(.system(size: 14, weight: .medium, design: .default))
+                                                .foregroundColor(.gray)
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(.gray)
+                                    }
+                                    .foregroundColor(.black)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 80)
+                                    .padding(.horizontal, 24)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .fill(Color.white)
+                                            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(Color.black, lineWidth: 2)
+                                    )
+                                }
+                                
+                                Button(action: { showingWithdrawals = true }) {
+                                    HStack(spacing: 16) {
+                                        Image(systemName: "banknote")
+                                            .font(.system(size: 24, weight: .bold))
+                                        
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Settlement")
+                                                .font(.system(size: 18, weight: .bold, design: .default))
+                                            Text("Withdraw earnings")
+                                                .font(.system(size: 14, weight: .medium, design: .default))
+                                                .foregroundColor(.gray)
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(.gray)
+                                    }
+                                    .foregroundColor(.black)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 80)
+                                    .padding(.horizontal, 24)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .fill(Color.white)
+                                            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(Color.black, lineWidth: 2)
+                                    )
+                                }
+                                
+                                // Large pay button
+                                Button(action: {
+                                    paymentState = .enteringAmount
+                                }) {
+                                    HStack(spacing: 16) {
+                                        Image(systemName: "dollarsign.circle.fill")
+                                            .font(.system(size: 32, weight: .bold))
+                                        Text("Pay")
+                                            .font(.system(size: 24, weight: .bold, design: .default))
+                                    }
+                                    .foregroundColor(.black)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 100)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .fill(Color.primaryYellow)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(Color.black, lineWidth: 3)
+                                    )
+                                    .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
                         }
-                        .padding(.bottom, 60)
+                        .padding(.horizontal, 40)
+                        .padding(.bottom, 40)
                     }
                 } else {
                     // Payment flow states
@@ -199,7 +281,7 @@ struct DashboardView: View {
             TransactionListView(userManager: userManager)
         }
         .sheet(isPresented: $showingWithdrawals) {
-            WithdrawalView(userManager: userManager)
+            SettlementView(userManager: userManager)
         }
     }
     
@@ -217,34 +299,6 @@ struct DashboardView: View {
 }
 
 // MARK: - Supporting Views
-
-struct ActionButton: View {
-    let icon: String
-    let title: String
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 16, weight: .bold))
-                Text(title)
-                    .font(.system(size: 16, weight: .bold, design: .default))
-            }
-            .foregroundColor(.black)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.primaryYellow.opacity(0.2))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.primaryYellow, lineWidth: 2)
-            )
-        }
-    }
-}
 
 struct FinancialCard: View {
     let title: String
@@ -278,15 +332,16 @@ struct FinancialCard: View {
             }
         }
         .frame(maxWidth: .infinity)
+        .frame(height: 120)
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white)
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+                .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(color.opacity(0.3), lineWidth: 2)
+                .stroke(Color.black, lineWidth: 2)
         )
     }
 }
@@ -298,35 +353,21 @@ struct WeeklyChart: View {
     var body: some View {
         let maxValue = data.max() ?? 1
         
-        HStack(alignment: .bottom, spacing: 16) {
+        HStack(alignment: .bottom, spacing: 12) {
             ForEach(0..<data.count, id: \.self) { index in
                 VStack(spacing: 8) {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    Color.primaryYellow,
-                                    Color.primaryYellow.opacity(0.7)
-                                ]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .frame(width: 28, height: CGFloat((data[index] / maxValue) * 80))
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.primaryYellow)
+                        .frame(width: 40, height: CGFloat((data[index] / maxValue) * 120))
                         .animation(.easeInOut(duration: 0.8).delay(Double(index) * 0.1), value: data[index])
                     
                     Text(days[index])
-                        .font(.system(size: 12, weight: .medium, design: .default))
+                        .font(.system(size: 16, weight: .medium, design: .default))
                         .foregroundColor(.gray)
                 }
             }
         }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.gray.opacity(0.05))
-        )
+        .padding(16)
     }
 }
 
@@ -338,15 +379,15 @@ struct AmountEntryView: View {
     @FocusState private var isAmountFocused: Bool
     
     var body: some View {
-        VStack(spacing: 60) {
-            VStack(spacing: 30) {
+        VStack(spacing: 80) {
+            VStack(spacing: 40) {
                 Text("Enter Amount")
                     .font(.system(size: 40, weight: .bold, design: .default))
                     .foregroundColor(.black)
                 
-                // Amount display
-                VStack(spacing: 16) {
-                    HStack(alignment: .bottom, spacing: 8) {
+                // Amount display with closer $ sign
+                VStack(spacing: 20) {
+                    HStack(alignment: .bottom, spacing: 4) {
                         Text("$")
                             .font(.system(size: 48, weight: .bold, design: .default))
                             .foregroundColor(.primaryYellow)
@@ -354,9 +395,9 @@ struct AmountEntryView: View {
                         TextField("0", text: $amount)
                             .font(.system(size: 64, weight: .bold, design: .default))
                             .foregroundColor(.black)
-                            .keyboardType(.numberPad)
+                            .keyboardType(.decimalPad)
                             .focused($isAmountFocused)
-                            .multilineTextAlignment(.center)
+                            .multilineTextAlignment(.leading)
                             .frame(minWidth: 200)
                     }
                     
@@ -366,9 +407,6 @@ struct AmountEntryView: View {
                         .frame(maxWidth: 400)
                 }
             }
-            
-            // Custom numeric keypad
-            NumericKeypad(amount: $amount)
             
             // Action buttons
             HStack(spacing: 30) {
@@ -418,63 +456,6 @@ struct AmountEntryView: View {
     private var isValidAmount: Bool {
         guard let value = Double(amount), value > 0 else { return false }
         return true
-    }
-}
-
-struct NumericKeypad: View {
-    @Binding var amount: String
-    
-    private let keys = [
-        ["1", "2", "3"],
-        ["4", "5", "6"],
-        ["7", "8", "9"],
-        [".", "0", "⌫"]
-    ]
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            ForEach(keys, id: \.self) { row in
-                HStack(spacing: 12) {
-                    ForEach(row, id: \.self) { key in
-                        Button(action: {
-                            handleKeyPress(key)
-                        }) {
-                            Text(key)
-                                .font(.system(size: 24, weight: .bold, design: .default))
-                                .foregroundColor(.black)
-                                .frame(width: 80, height: 60)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color.white)
-                                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                                )
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    private func handleKeyPress(_ key: String) {
-        switch key {
-        case "⌫":
-            if !amount.isEmpty {
-                amount.removeLast()
-            }
-        case ".":
-            if !amount.contains(".") {
-                amount += key
-            }
-        default:
-            // Limit to reasonable amount length
-            if amount.count < 8 {
-                amount += key
-            }
-        }
     }
 }
 
@@ -946,16 +927,32 @@ struct TransactionListView: View {
     }
 }
 
-struct WithdrawalView: View {
+struct SettlementView: View {
     @ObservedObject var userManager: UserManager
     @Environment(\.dismiss) private var dismiss
+    @State private var withdrawalAmount: String = ""
+    @State private var showingWithdrawal = false
+    @State private var withdrawalMethod: WithdrawalMethod = .bankTransfer
+    @State private var isProcessing = false
+    
+    enum WithdrawalMethod: String, CaseIterable {
+        case bankTransfer = "Bank Transfer"
+        case touchNGo = "Touch 'n Go"
+        
+        var icon: String {
+            switch self {
+            case .bankTransfer: return "building.columns"
+            case .touchNGo: return "wallet.bifold.fill"
+            }
+        }
+    }
     
     var body: some View {
         NavigationView {
             VStack(spacing: 30) {
                 // Header
                 HStack {
-                    Text("Withdrawals")
+                    Text("Settlement")
                         .font(.system(size: 28, weight: .bold, design: .default))
                         .foregroundColor(.black)
                     
@@ -972,108 +969,383 @@ struct WithdrawalView: View {
                 .padding(.horizontal, 30)
                 .padding(.top, 20)
                 
-                // Balance overview
-                VStack(spacing: 24) {
-                    FinancialCard(
-                        title: "Available Balance",
-                        value: "$\(String(format: "%.2f", userManager.totalBalance))",
-                        subtitle: "Ready for withdrawal",
-                        color: .primaryYellow,
-                        icon: "dollarsign.circle.fill"
-                    )
-                    
-                    HStack(spacing: 20) {
+                if !showingWithdrawal {
+                    // Settlement overview
+                    VStack(spacing: 24) {
                         FinancialCard(
-                            title: "This Month",
-                            value: "$\(String(format: "%.2f", userManager.totalBalance * 0.3))",
-                            subtitle: "Earned",
-                            color: .green,
-                            icon: "chart.line.uptrend.xyaxis"
+                            title: "Available Balance",
+                            value: "$\(String(format: "%.2f", userManager.availableBalance))",
+                            subtitle: "Ready for withdrawal",
+                            color: .primaryYellow,
+                            icon: "dollarsign.circle.fill"
                         )
                         
-                        FinancialCard(
-                            title: "Total Withdrawn",
-                            value: "$0.00",
-                            subtitle: "All time",
-                            color: .blue,
-                            icon: "arrow.down.circle.fill"
+                        HStack(spacing: 20) {
+                            FinancialCard(
+                                title: "This Month",
+                                value: "$\(String(format: "%.2f", userManager.availableBalance * 0.3))",
+                                subtitle: "Earned",
+                                color: .primaryYellow,
+                                icon: "chart.line.uptrend.xyaxis"
+                            )
+                            
+                            FinancialCard(
+                                title: "Last Settlement",
+                                value: "$0.00",
+                                subtitle: "Never withdrawn",
+                                color: .primaryYellow,
+                                icon: "arrow.down.circle.fill"
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 30)
+                    
+                    Spacer()
+                    
+                    // Withdraw button
+                    Button(action: {
+                        showingWithdrawal = true
+                    }) {
+                        HStack(spacing: 16) {
+                            Image(systemName: "banknote.fill")
+                                .font(.system(size: 24, weight: .bold))
+                            Text("Request Settlement")
+                                .font(.system(size: 20, weight: .bold, design: .default))
+                        }
+                        .foregroundColor(.black)
+                        .frame(width: 280, height: 60)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.primaryYellow)
                         )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.black, lineWidth: 3)
+                        )
+                        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
                     }
-                }
-                .padding(.horizontal, 30)
-                
-                Spacer()
-                
-                // Withdraw button
-                Button(action: {
-                    // Handle withdrawal logic
-                }) {
-                    HStack(spacing: 16) {
-                        Image(systemName: "banknote.fill")
-                            .font(.system(size: 24, weight: .bold))
-                        Text("Request Withdrawal")
-                            .font(.system(size: 20, weight: .bold, design: .default))
+                    .padding(.bottom, 60)
+                } else {
+                    // Withdrawal form
+                    VStack(spacing: 30) {
+                        Text("Withdrawal Details")
+                            .font(.system(size: 24, weight: .bold, design: .default))
+                            .foregroundColor(.black)
+                        
+                        // Amount input
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Withdrawal Amount")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.gray)
+                            
+                            HStack {
+                                Text("$")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundColor(.primaryYellow)
+                                
+                                TextField("0.00", text: $withdrawalAmount)
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundColor(.black)
+                                    .keyboardType(.decimalPad)
+                            }
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.gray.opacity(0.1))
+                            )
+                            
+                            Text("Available: $\(String(format: "%.2f", userManager.availableBalance))")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.gray)
+                        }
+                        
+                        // Withdrawal method
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Withdrawal Method")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.gray)
+                            
+                            VStack(spacing: 12) {
+                                ForEach(WithdrawalMethod.allCases, id: \.self) { method in
+                                    Button(action: {
+                                        withdrawalMethod = method
+                                    }) {
+                                        HStack {
+                                            Image(systemName: method.icon)
+                                                .font(.system(size: 20, weight: .bold))
+                                                .foregroundColor(withdrawalMethod == method ? .primaryYellow : .gray)
+                                            
+                                            Text(method.rawValue)
+                                                .font(.system(size: 16, weight: .medium))
+                                                .foregroundColor(.black)
+                                            
+                                            Spacer()
+                                            
+                                            Image(systemName: withdrawalMethod == method ? "checkmark.circle.fill" : "circle")
+                                                .font(.system(size: 20))
+                                                .foregroundColor(withdrawalMethod == method ? .primaryYellow : .gray)
+                                        }
+                                        .padding()
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(withdrawalMethod == method ? Color.primaryYellow.opacity(0.1) : Color.white)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .stroke(withdrawalMethod == method ? Color.primaryYellow : Color.gray.opacity(0.3), lineWidth: 2)
+                                                )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        // Action buttons
+                        HStack(spacing: 20) {
+                            Button(action: {
+                                showingWithdrawal = false
+                                withdrawalAmount = ""
+                            }) {
+                                Text("Cancel")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(.gray)
+                                    .frame(width: 120, height: 50)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.gray.opacity(0.1))
+                                    )
+                            }
+                            
+                            Button(action: {
+                                processWithdrawal()
+                            }) {
+                                HStack {
+                                    if isProcessing {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                                            .scaleEffect(0.8)
+                                    }
+                                    Text(isProcessing ? "Processing..." : "Confirm Withdrawal")
+                                        .font(.system(size: 18, weight: .bold))
+                                }
+                                .foregroundColor(.black)
+                                .frame(width: 200, height: 50)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(isValidWithdrawal ? Color.primaryYellow : Color.gray.opacity(0.3))
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.black, lineWidth: 2)
+                                )
+                            }
+                            .disabled(!isValidWithdrawal || isProcessing)
+                        }
+                        .padding(.bottom, 40)
                     }
-                    .foregroundColor(.black)
-                    .frame(width: 280, height: 60)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.primaryYellow)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.black, lineWidth: 3)
-                    )
-                    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    .padding(.horizontal, 30)
                 }
-                .padding(.bottom, 60)
             }
             .background(Color.white)
+        }
+    }
+    
+    private var isValidWithdrawal: Bool {
+        guard let amount = Double(withdrawalAmount) else { return false }
+        return amount > 0 && amount <= userManager.availableBalance
+    }
+    
+    private func processWithdrawal() {
+        isProcessing = true
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            // Actually deduct the withdrawal amount from balance
+            if let amount = Double(withdrawalAmount) {
+                userManager.processWithdrawal(amount: amount)
+            }
+            
+            isProcessing = false
+            showingWithdrawal = false
+            withdrawalAmount = ""
         }
     }
 }
 
 struct TransactionRow: View {
     let transaction: Transaction
+    @State private var showingDetails = false
     
     var body: some View {
-        HStack(spacing: 16) {
-            // Customer avatar
-            Circle()
-                .fill(Color.primaryYellow.opacity(0.2))
-                .frame(width: 50, height: 50)
-                .overlay(
-                    Text(String(transaction.customerName.prefix(1)))
-                        .font(.system(size: 20, weight: .bold, design: .default))
-                        .foregroundColor(.primaryYellow)
-                )
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(transaction.customerName)
-                    .font(.system(size: 16, weight: .bold, design: .default))
-                    .foregroundColor(.black)
+        Button(action: {
+            showingDetails = true
+        }) {
+            HStack(spacing: 16) {
+                // Customer avatar
+                Circle()
+                    .fill(Color.primaryYellow.opacity(0.2))
+                    .frame(width: 50, height: 50)
+                    .overlay(
+                        Text(String(transaction.customerName.prefix(1)))
+                            .font(.system(size: 20, weight: .bold, design: .default))
+                            .foregroundColor(.primaryYellow)
+                    )
                 
-                Text(formatDate(transaction.date))
-                    .font(.system(size: 14, weight: .medium, design: .default))
-                    .foregroundColor(.gray)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(transaction.customerName)
+                        .font(.system(size: 16, weight: .bold, design: .default))
+                        .foregroundColor(.black)
+                    
+                    Text(formatDate(transaction.date))
+                        .font(.system(size: 14, weight: .medium, design: .default))
+                        .foregroundColor(.gray)
+                }
+                
+                Spacer()
+                
+                HStack(spacing: 8) {
+                    Text("$\(String(format: "%.2f", transaction.amount))")
+                        .font(.system(size: 18, weight: .bold, design: .default))
+                        .foregroundColor(.black)
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.gray)
+                }
             }
-            
-            Spacer()
-            
-            Text("$\(String(format: "%.2f", transaction.amount))")
-                .font(.system(size: 18, weight: .bold, design: .default))
-                .foregroundColor(.black)
+            .padding()
+            .background(Color.white)
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.black, lineWidth: 2)
+            )
         }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .buttonStyle(PlainButtonStyle())
+        .sheet(isPresented: $showingDetails) {
+            TransactionDetailView(transaction: transaction)
+        }
     }
     
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mm a"
         return formatter.string(from: date)
+    }
+}
+
+struct TransactionDetailView: View {
+    let transaction: Transaction
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 30) {
+                // Header
+                HStack {
+                    Text("Transaction Details")
+                        .font(.system(size: 28, weight: .bold, design: .default))
+                        .foregroundColor(.black)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.gray)
+                    }
+                }
+                .padding(.horizontal, 30)
+                .padding(.top, 20)
+                
+                // Transaction info
+                VStack(spacing: 24) {
+                    // Customer info
+                    VStack(spacing: 16) {
+                        Circle()
+                            .fill(Color.primaryYellow.opacity(0.2))
+                            .frame(width: 80, height: 80)
+                            .overlay(
+                                Text(String(transaction.customerName.prefix(1)))
+                                    .font(.system(size: 32, weight: .bold, design: .default))
+                                    .foregroundColor(.primaryYellow)
+                            )
+                        
+                        Text(transaction.customerName)
+                            .font(.system(size: 24, weight: .bold, design: .default))
+                            .foregroundColor(.black)
+                    }
+                    
+                    // Transaction amount
+                    VStack(spacing: 8) {
+                        Text("Amount")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.gray)
+                        
+                        Text("$\(String(format: "%.2f", transaction.amount))")
+                            .font(.system(size: 48, weight: .bold, design: .default))
+                            .foregroundColor(.black)
+                    }
+                    
+                    // Transaction details
+                    VStack(spacing: 16) {
+                        DetailRow(title: "Transaction ID", value: String(transaction.id.prefix(8).uppercased()))
+                        DetailRow(title: "Date", value: formatFullDate(transaction.date))
+                        DetailRow(title: "Time", value: formatTime(transaction.date))
+                        DetailRow(title: "Payment Method", value: "Face Recognition")
+                        DetailRow(title: "Status", value: "Completed")
+                    }
+                    .padding(20)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color.white)
+                            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.black, lineWidth: 2)
+                    )
+                }
+                .padding(.horizontal, 30)
+                
+                Spacer()
+            }
+            .background(Color.white)
+        }
+    }
+    
+    private func formatFullDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, yyyy"
+        return formatter.string(from: date)
+    }
+    
+    private func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return formatter.string(from: date)
+    }
+}
+
+struct DetailRow: View {
+    let title: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.gray)
+            
+            Spacer()
+            
+            Text(value)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.black)
+        }
     }
 }
 
