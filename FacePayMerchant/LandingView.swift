@@ -133,7 +133,7 @@ struct LandingView: View {
                     Button(action: {
                         showSignIn = true
                     }) {
-                        Text("Sign In with Face ID")
+                        Text("Sign In")
                             .font(.system(size: 18, weight: .bold, design: .default))
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)

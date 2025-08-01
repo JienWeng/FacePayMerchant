@@ -2,13 +2,13 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Build FacePayMobile",
+			"label": "Build FacePayMerchant",
 			"type": "shell",
-			"command": "xcodebuild -project FacePayMobile.xcodeproj -scheme FacePayMobile -destination 'platform=iOS Simulator,name=iPhone 15 Pro' build",
+			"command": "xcodebuild -project FacePayMerchant.xcodeproj -scheme FacePayMerchant -destination 'platform=iOS Simulator,name=iPad Air 11-inch (M3)' build",
 			"group": "build",
 			"isBackground": false,
 			"problemMatcher": [
-				"$xcodebuild-swift"
+				"$swiftc"
 			]
 		}
 	]

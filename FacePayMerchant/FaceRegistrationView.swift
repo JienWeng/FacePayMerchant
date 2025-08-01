@@ -55,7 +55,7 @@ struct FaceRegistrationView: View {
                         .animation(.easeInOut(duration: 0.3), value: progress)
 
                     // Center icon
-                    Image(systemName: getCenterIcon())
+                    Image(systemName: "faceid")
                         .font(.system(size: 40, weight: .semibold))
                         .foregroundColor(getIconColor())
                         .scaleEffect(showResult ? 1.2 : 1.0)

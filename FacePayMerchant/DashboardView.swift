@@ -6,275 +6,1254 @@
 //
 
 import SwiftUI
+import AVFoundation
+import Vision
+
+enum PaymentState {
+    case ready
+    case enteringAmount
+    case scanningCustomer
+    case confirmingPayment
+    case processing
+    case completed
+}
 
 struct DashboardView: View {
     @ObservedObject var userManager: UserManager
+    @State private var paymentState: PaymentState = .ready
+    @State private var paymentAmount: String = ""
+    @State private var recognizedCustomer: String = ""
+    @State private var showingTransactions = false
+    @State private var showingWithdrawals = false
     
     var body: some View {
         GeometryReader { geometry in
-            NavigationView {
-                ZStack {
-                    Color.white
-                        .ignoresSafeArea()
-                    
-                    // Main content optimized for landscape iPad
-                    HStack(spacing: 0) {
-                        // Left side - Business Info Panel
-                        VStack(alignment: .leading, spacing: 30) {
-                            // Header
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Welcome back,")
-                                    .font(.system(size: 20, weight: .medium, design: .default))
-                                    .foregroundColor(.gray)
-                                
-                                Text(userManager.currentUser.name)
-                                    .font(.system(size: 36, weight: .bold, design: .default))
-                                    .foregroundColor(.black)
-                                    .lineLimit(2)
-                                    .minimumScaleFactor(0.8)
-                            }
-                            .padding(.top, 20)
-                            
-                            // Business Info Cards
-                            VStack(spacing: 20) {
-                                // Business Name Card
-                                BusinessInfoCard(
-                                    icon: "building.2.fill",
-                                    title: "Business Name",
-                                    value: userManager.currentUser.businessName.isEmpty ? "Not Set" : userManager.currentUser.businessName
-                                )
-                                
-                                // Email Card
-                                BusinessInfoCard(
-                                    icon: "envelope.fill",
-                                    title: "Email",
-                                    value: userManager.currentUser.email.isEmpty ? "Not Set" : userManager.currentUser.email
-                                )
-                                
-                                // Phone Number Card
-                                BusinessInfoCard(
-                                    icon: "phone.fill",
-                                    title: "Phone Number",
-                                    value: userManager.currentUser.phoneNumber.isEmpty ? "Not Set" : userManager.currentUser.phoneNumber
-                                )
-                            }
-                            
-                            Spacer()
-                            
-                            // Logout Button
-                            Button(action: {
-                                userManager.signOut()
-                            }) {
-                                HStack(spacing: 12) {
-                                    Image(systemName: "rectangle.portrait.and.arrow.right")
-                                        .font(.system(size: 18, weight: .bold))
-                                    Text("Sign Out")
-                                        .font(.system(size: 18, weight: .bold, design: .default))
+            ZStack {
+                Color.white
+                    .ignoresSafeArea()
+                
+                if paymentState == .ready {
+                    // Main dashboard view
+                    VStack(spacing: 0) {
+                        // Top header with business info
+                        VStack(spacing: 24) {
+                            // Business header
+                            HStack {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(userManager.currentUser.businessName.isEmpty ? "FacePay Merchant" : userManager.currentUser.businessName)
+                                        .font(.system(size: 32, weight: .bold, design: .default))
+                                        .foregroundColor(.black)
+                                    
+                                    Text("Today • \(getCurrentDate())")
+                                        .font(.system(size: 16, weight: .medium, design: .default))
+                                        .foregroundColor(.gray)
                                 }
-                                .foregroundColor(.black)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color.gray.opacity(0.1))
-                                .cornerRadius(15)
+                                
+                                Spacer()
+                                
+                                // Actions row
+                                HStack(spacing: 16) {
+                                    ActionButton(
+                                        icon: "list.bullet.rectangle",
+                                        title: "Transactions",
+                                        action: { showingTransactions = true }
+                                    )
+                                    
+                                    ActionButton(
+                                        icon: "banknote",
+                                        title: "Withdrawals",
+                                        action: { showingWithdrawals = true }
+                                    )
+                                    
+                                    Button(action: {
+                                        userManager.signOut()
+                                    }) {
+                                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                                            .font(.system(size: 20, weight: .bold))
+                                            .foregroundColor(.gray)
+                                    }
+                                }
                             }
-                            .padding(.bottom, 30)
-                        }
-                        .frame(width: geometry.size.width * 0.4)
-                        .padding(.horizontal, 30)
-                        .background(Color.gray.opacity(0.05))
-                        
-                        // Right side - Main Content Area
-                        VStack(spacing: 30) {
-                            // Quick Stats Row
+                            
+                            // Financial overview cards
                             HStack(spacing: 20) {
-                                StatCard(
-                                    icon: "creditcard.fill",
-                                    title: "Today's Transactions",
-                                    value: "0",
-                                    color: .primaryYellow
+                                // Balance Card
+                                FinancialCard(
+                                    title: "Current Balance",
+                                    value: "$\(String(format: "%.2f", userManager.totalBalance))",
+                                    subtitle: "Available",
+                                    color: .primaryYellow,
+                                    icon: "dollarsign.circle.fill"
                                 )
                                 
-                                StatCard(
-                                    icon: "dollarsign.circle.fill",
-                                    title: "Today's Revenue",
-                                    value: "$0.00",
-                                    color: .green
-                                )
-                                
-                                StatCard(
-                                    icon: "person.2.fill",
-                                    title: "Active Customers",
-                                    value: "0",
-                                    color: .blue
-                                )
-                            }
-                            
-                            // Merchant Tools Section
-                            VStack(alignment: .leading, spacing: 20) {
-                                Text("Merchant Tools")
-                                    .font(.system(size: 28, weight: .bold, design: .default))
-                                    .foregroundColor(.black)
-                                
-                                LazyVGrid(columns: [
-                                    GridItem(.flexible(), spacing: 20),
-                                    GridItem(.flexible(), spacing: 20)
-                                ], spacing: 20) {
-                                    // Payment Terminal
-                                    MerchantToolCard(
-                                        icon: "terminal.fill",
-                                        title: "Payment Terminal",
-                                        subtitle: "Process face payments",
-                                        isComingSoon: true
+                                // Today's Stats
+                                VStack(spacing: 20) {
+                                    FinancialCard(
+                                        title: "Today's Revenue",
+                                        value: "$\(String(format: "%.0f", userManager.todayRevenue))",
+                                        subtitle: "\(userManager.todayTransactionCount) transactions",
+                                        color: .green,
+                                        icon: "chart.line.uptrend.xyaxis"
                                     )
                                     
-                                    // Transaction History
-                                    MerchantToolCard(
-                                        icon: "list.bullet.rectangle.fill",
-                                        title: "Transaction History",
-                                        subtitle: "View payment records",
-                                        isComingSoon: true
-                                    )
-                                    
-                                    // Analytics
-                                    MerchantToolCard(
-                                        icon: "chart.bar.fill",
-                                        title: "Analytics",
-                                        subtitle: "Business insights",
-                                        isComingSoon: true
-                                    )
-                                    
-                                    // Settings
-                                    MerchantToolCard(
-                                        icon: "gearshape.fill",
-                                        title: "Settings",
-                                        subtitle: "Configure your account",
-                                        isComingSoon: true
+                                    FinancialCard(
+                                        title: "Weekly Trend",
+                                        value: "+12.5%",
+                                        subtitle: "vs last week",
+                                        color: .blue,
+                                        icon: "arrow.up.right.circle.fill"
                                     )
                                 }
                             }
                             
-                            Spacer()
+                            // Weekly chart
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Weekly Revenue")
+                                    .font(.system(size: 20, weight: .bold, design: .default))
+                                    .foregroundColor(.black)
+                                
+                                WeeklyChart(data: userManager.weeklyRevenue)
+                                    .frame(height: 120)
+                            }
                         }
-                        .frame(width: geometry.size.width * 0.6)
-                        .padding(.horizontal, 30)
-                        .padding(.vertical, 30)
+                        .padding(.horizontal, 40)
+                        .padding(.top, 30)
+                        
+                        Spacer()
+                        
+                        // Large pay button
+                        Button(action: {
+                            paymentState = .enteringAmount
+                        }) {
+                            HStack(spacing: 16) {
+                                Image(systemName: "dollarsign.circle.fill")
+                                    .font(.system(size: 36, weight: .bold))
+                                Text("Start Payment")
+                                    .font(.system(size: 28, weight: .bold, design: .default))
+                            }
+                            .foregroundColor(.black)
+                            .frame(width: 280, height: 80)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color.primaryYellow)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(Color.black, lineWidth: 4)
+                            )
+                            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                        }
+                        .padding(.bottom, 60)
+                    }
+                } else {
+                    // Payment flow states
+                    Group {
+                        switch paymentState {
+                        case .enteringAmount:
+                            AmountEntryView(amount: $paymentAmount) {
+                                paymentState = .scanningCustomer
+                            }
+                        case .scanningCustomer:
+                            RealCustomerFaceScanView(
+                                amount: paymentAmount,
+                                onCustomerRecognized: { customer in
+                                    recognizedCustomer = customer
+                                    paymentState = .confirmingPayment
+                                },
+                                onCancel: {
+                                    resetPayment()
+                                }
+                            )
+                        case .confirmingPayment:
+                            PaymentConfirmationView(
+                                amount: paymentAmount,
+                                customer: recognizedCustomer,
+                                onConfirm: {
+                                    // Add transaction to user manager
+                                    if let amount = Double(paymentAmount) {
+                                        userManager.addTransaction(customerName: recognizedCustomer, amount: amount)
+                                    }
+                                    paymentState = .processing
+                                },
+                                onCancel: {
+                                    resetPayment()
+                                }
+                            )
+                        case .processing:
+                            ProcessingPaymentView {
+                                paymentState = .completed
+                            }
+                        case .completed:
+                            PaymentCompletedView {
+                                resetPayment()
+                            }
+                        default:
+                            EmptyView()
+                        }
                     }
                 }
             }
-            .navigationBarHidden(true)
         }
+        .navigationBarHidden(true)
+        .sheet(isPresented: $showingTransactions) {
+            TransactionListView(userManager: userManager)
+        }
+        .sheet(isPresented: $showingWithdrawals) {
+            WithdrawalView(userManager: userManager)
+        }
+    }
+    
+    private func resetPayment() {
+        paymentState = .ready
+        paymentAmount = ""
+        recognizedCustomer = ""
+    }
+    
+    private func getCurrentDate() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, yyyy"
+        return formatter.string(from: Date())
     }
 }
 
 // MARK: - Supporting Views
 
-struct BusinessInfoCard: View {
+struct ActionButton: View {
     let icon: String
     let title: String
-    let value: String
+    let action: () -> Void
     
     var body: some View {
-        HStack(spacing: 15) {
-            Image(systemName: icon)
-                .font(.system(size: 20, weight: .bold))
-                .foregroundColor(.primaryYellow)
-                .frame(width: 40, height: 40)
-                .background(Circle().fill(Color.primaryYellow.opacity(0.1)))
-            
-            VStack(alignment: .leading, spacing: 4) {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .bold))
                 Text(title)
-                    .font(.system(size: 14, weight: .medium, design: .default))
-                    .foregroundColor(.gray)
-                
-                Text(value)
                     .font(.system(size: 16, weight: .bold, design: .default))
-                    .foregroundColor(.black)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.8)
             }
-            
-            Spacer()
+            .foregroundColor(.black)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.primaryYellow.opacity(0.2))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.primaryYellow, lineWidth: 2)
+            )
         }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(15)
-        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
 }
 
-struct StatCard: View {
-    let icon: String
+struct FinancialCard: View {
     let title: String
     let value: String
+    let subtitle: String
     let color: Color
+    let icon: String
     
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 24, weight: .bold))
-                .foregroundColor(color)
-            
-            VStack(spacing: 4) {
-                Text(value)
-                    .font(.system(size: 24, weight: .bold, design: .default))
-                    .foregroundColor(.black)
+        VStack(spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(title)
+                        .font(.system(size: 16, weight: .medium, design: .default))
+                        .foregroundColor(.gray)
+                    
+                    Text(value)
+                        .font(.system(size: 28, weight: .bold, design: .default))
+                        .foregroundColor(.black)
+                    
+                    Text(subtitle)
+                        .font(.system(size: 14, weight: .medium, design: .default))
+                        .foregroundColor(.gray)
+                }
                 
-                Text(title)
-                    .font(.system(size: 12, weight: .medium, design: .default))
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
+                Spacer()
+                
+                Image(systemName: icon)
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundColor(color)
             }
         }
         .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.white)
-        .cornerRadius(15)
-        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(color.opacity(0.3), lineWidth: 2)
+        )
     }
 }
 
-struct MerchantToolCard: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-    let isComingSoon: Bool
+struct WeeklyChart: View {
+    let data: [Double]
+    private let days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     
     var body: some View {
-        VStack(spacing: 15) {
-            Image(systemName: icon)
-                .font(.system(size: 30, weight: .bold))
-                .foregroundColor(isComingSoon ? .gray : .primaryYellow)
-            
-            VStack(spacing: 6) {
-                Text(title)
-                    .font(.system(size: 18, weight: .bold, design: .default))
-                    .foregroundColor(.black)
-                    .multilineTextAlignment(.center)
-                
-                Text(subtitle)
-                    .font(.system(size: 14, weight: .medium, design: .default))
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-                
-                if isComingSoon {
-                    Text("Coming Soon")
-                        .font(.system(size: 12, weight: .bold, design: .default))
-                        .foregroundColor(.primaryYellow)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(Color.primaryYellow.opacity(0.1))
-                        .cornerRadius(8)
-                        .padding(.top, 4)
+        let maxValue = data.max() ?? 1
+        
+        HStack(alignment: .bottom, spacing: 16) {
+            ForEach(0..<data.count, id: \.self) { index in
+                VStack(spacing: 8) {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(colors: [
+                                    Color.primaryYellow,
+                                    Color.primaryYellow.opacity(0.7)
+                                ]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(width: 28, height: CGFloat((data[index] / maxValue) * 80))
+                        .animation(.easeInOut(duration: 0.8).delay(Double(index) * 0.1), value: data[index])
+                    
+                    Text(days[index])
+                        .font(.system(size: 12, weight: .medium, design: .default))
+                        .foregroundColor(.gray)
                 }
             }
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 140)
+        .padding(.horizontal)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.gray.opacity(0.05))
+        )
+    }
+}
+
+// MARK: - Payment Flow Views
+
+struct AmountEntryView: View {
+    @Binding var amount: String
+    let onNext: () -> Void
+    @FocusState private var isAmountFocused: Bool
+    
+    var body: some View {
+        VStack(spacing: 60) {
+            VStack(spacing: 30) {
+                Text("Enter Amount")
+                    .font(.system(size: 40, weight: .bold, design: .default))
+                    .foregroundColor(.black)
+                
+                // Amount display
+                VStack(spacing: 16) {
+                    HStack(alignment: .bottom, spacing: 8) {
+                        Text("$")
+                            .font(.system(size: 48, weight: .bold, design: .default))
+                            .foregroundColor(.primaryYellow)
+                        
+                        TextField("0", text: $amount)
+                            .font(.system(size: 64, weight: .bold, design: .default))
+                            .foregroundColor(.black)
+                            .keyboardType(.numberPad)
+                            .focused($isAmountFocused)
+                            .multilineTextAlignment(.center)
+                            .frame(minWidth: 200)
+                    }
+                    
+                    Rectangle()
+                        .fill(Color.primaryYellow)
+                        .frame(height: 4)
+                        .frame(maxWidth: 400)
+                }
+            }
+            
+            // Custom numeric keypad
+            NumericKeypad(amount: $amount)
+            
+            // Action buttons
+            HStack(spacing: 30) {
+                Button(action: {
+                    amount = ""
+                }) {
+                    Text("Clear")
+                        .font(.system(size: 20, weight: .bold, design: .default))
+                        .foregroundColor(.gray)
+                        .frame(width: 120, height: 60)
+                        .background(
+                            RoundedRectangle(cornerRadius: 15)
+                                .fill(Color.gray.opacity(0.1))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 15)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 2)
+                        )
+                }
+                
+                Button(action: onNext) {
+                    HStack(spacing: 12) {
+                        Text("Continue")
+                            .font(.system(size: 20, weight: .bold, design: .default))
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 18, weight: .bold))
+                    }
+                    .foregroundColor(.black)
+                    .frame(width: 180, height: 60)
+                    .background(
+                        RoundedRectangle(cornerRadius: 15)
+                            .fill(isValidAmount ? Color.primaryYellow : Color.gray.opacity(0.3))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 15)
+                            .stroke(Color.black, lineWidth: 3)
+                    )
+                }
+                .disabled(!isValidAmount)
+            }
+        }
+        .onAppear {
+            isAmountFocused = true
+        }
+    }
+    
+    private var isValidAmount: Bool {
+        guard let value = Double(amount), value > 0 else { return false }
+        return true
+    }
+}
+
+struct NumericKeypad: View {
+    @Binding var amount: String
+    
+    private let keys = [
+        ["1", "2", "3"],
+        ["4", "5", "6"],
+        ["7", "8", "9"],
+        [".", "0", "⌫"]
+    ]
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            ForEach(keys, id: \.self) { row in
+                HStack(spacing: 12) {
+                    ForEach(row, id: \.self) { key in
+                        Button(action: {
+                            handleKeyPress(key)
+                        }) {
+                            Text(key)
+                                .font(.system(size: 24, weight: .bold, design: .default))
+                                .foregroundColor(.black)
+                                .frame(width: 80, height: 60)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color.white)
+                                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                                )
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private func handleKeyPress(_ key: String) {
+        switch key {
+        case "⌫":
+            if !amount.isEmpty {
+                amount.removeLast()
+            }
+        case ".":
+            if !amount.contains(".") {
+                amount += key
+            }
+        default:
+            // Limit to reasonable amount length
+            if amount.count < 8 {
+                amount += key
+            }
+        }
+    }
+}
+
+struct RealCustomerFaceScanView: View {
+    let amount: String
+    let onCustomerRecognized: (String) -> Void
+    let onCancel: () -> Void
+    
+    @StateObject private var faceDataManager = FaceDataManager()
+    @State private var isScanning = true
+    @State private var progress: Double = 0.0
+    @State private var statusMessage = "Position customer's face in the circle"
+    @State private var authenticationResult: AuthResult?
+    @State private var showResult = false
+    @State private var livenessDetected = false
+    @State private var faceQuality: Float = 0.0
+    
+    enum AuthResult {
+        case success
+        case failed
+        case noFaceRegistered
+    }
+    
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            // Camera view
+            RealCustomerFaceAuthController(
+                isScanning: $isScanning,
+                progress: $progress,
+                statusMessage: $statusMessage,
+                authenticationResult: $authenticationResult,
+                showResult: $showResult,
+                livenessDetected: $livenessDetected,
+                faceQuality: $faceQuality,
+                faceDataManager: faceDataManager,
+                onCustomerRecognized: onCustomerRecognized
+            )
+            .ignoresSafeArea()
+            
+            // UI overlay
+            VStack {
+                // Top info
+                VStack(spacing: 16) {
+                    HStack {
+                        Button(action: onCancel) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 32))
+                                .foregroundColor(.white)
+                        }
+                        
+                        Spacer()
+                        
+                        VStack(spacing: 4) {
+                            Text("Customer Face Scan")
+                                .font(.system(size: 24, weight: .bold, design: .default))
+                                .foregroundColor(.white)
+                            
+                            Text("Amount: $\(amount)")
+                                .font(.system(size: 20, weight: .bold, design: .default))
+                                .foregroundColor(.primaryYellow)
+                        }
+                        
+                        Spacer()
+                        
+                        // Balance space
+                        Color.clear.frame(width: 32, height: 32)
+                    }
+                }
+                .padding(.top, 60)
+                .padding(.horizontal, 40)
+                
+                Spacer()
+                
+                // Face circle overlay - same as FaceRegistrationView
+                ZStack {
+                    // Progress circle
+                    Circle()
+                        .trim(from: 0, to: progress)
+                        .stroke(
+                            livenessDetected ? Color.green : Color.primaryYellow,
+                            style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                        )
+                        .frame(width: 280, height: 280)
+                        .rotationEffect(.degrees(-90))
+                        .animation(.easeInOut(duration: 0.3), value: progress)
+
+                    // Center icon
+                    Image(systemName: "faceid")
+                        .font(.system(size: 40, weight: .semibold))
+                        .foregroundColor(getIconColor())
+                        .scaleEffect(showResult ? 1.2 : 1.0)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.6), value: showResult)
+                    
+                    // Quality indicator
+                    if faceQuality > 0 {
+                        Circle()
+                            .fill(Color.green.opacity(Double(faceQuality)))
+                            .frame(width: 20, height: 20)
+                            .offset(y: -140)
+                    }
+                }
+                
+                Spacer()
+                
+                // Status message
+                VStack(spacing: 20) {
+                    Text(statusMessage)
+                        .font(.system(size: 18, weight: .medium, design: .default))
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                    
+                    // Success checkmark
+                    if showResult && authenticationResult == .success {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.green)
+                            .scaleEffect(showResult ? 1.0 : 0.5)
+                            .animation(.spring(response: 0.5, dampingFraction: 0.7), value: showResult)
+                    }
+                }
+                .padding(.bottom, 80)
+            }
+        }
+    }
+    
+    private func getIconColor() -> Color {
+        if authenticationResult == .success {
+            return .green
+        } else if authenticationResult == .failed {
+            return .red
+        } else {
+            return .white
+        }
+    }
+}
+
+struct RealCustomerFaceAuthController: UIViewControllerRepresentable {
+    @Binding var isScanning: Bool
+    @Binding var progress: Double
+    @Binding var statusMessage: String
+    @Binding var authenticationResult: RealCustomerFaceScanView.AuthResult?
+    @Binding var showResult: Bool
+    @Binding var livenessDetected: Bool
+    @Binding var faceQuality: Float
+    let faceDataManager: FaceDataManager
+    let onCustomerRecognized: (String) -> Void
+    
+    func makeUIViewController(context: Context) -> UIViewController {
+        let controller = RealCustomerFaceAuthViewController()
+        controller.delegate = context.coordinator
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
+        if let controller = uiViewController as? RealCustomerFaceAuthViewController {
+            controller.isScanning = isScanning
+        }
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, CustomerFaceAuthDelegate {
+        let parent: RealCustomerFaceAuthController
+        private var scanStartTime: Date?
+        private let scanDuration: TimeInterval = 2.5
+        private var scanningFace: VNFaceObservation?
+        
+        init(_ parent: RealCustomerFaceAuthController) {
+            self.parent = parent
+        }
+        
+        func didDetectCustomerFace(_ observation: VNFaceObservation) {
+            DispatchQueue.main.async {
+                // Start scan timer
+                if self.parent.isScanning && self.scanStartTime == nil {
+                    self.scanStartTime = Date()
+                    self.scanningFace = observation
+                    self.parent.statusMessage = "Scanning customer face..."
+                    self.parent.livenessDetected = true
+                }
+                
+                // Update face quality
+                self.parent.faceQuality = Float.random(in: 0.8...1.0)
+                
+                // Update progress
+                if let startTime = self.scanStartTime {
+                    let elapsed = Date().timeIntervalSince(startTime)
+                    let progress = min(elapsed / self.scanDuration, 1.0)
+                    self.parent.progress = progress
+                    
+                    // Complete scan
+                    if progress >= 1.0 {
+                        self.completeScan(observation)
+                    }
+                }
+            }
+        }
+        
+        func didLoseCustomerFace() {
+            DispatchQueue.main.async {
+                if self.parent.isScanning && !self.parent.showResult {
+                    self.resetScan()
+                    self.parent.statusMessage = "Position customer's face in the circle"
+                    self.parent.livenessDetected = false
+                    self.parent.faceQuality = 0.0
+                }
+            }
+        }
+        
+        private func completeScan(_ observation: VNFaceObservation) {
+            // For demo purposes, simulate customer recognition
+            let existingCustomers = ["Alice Johnson", "Bob Smith", "Carol Williams", "David Brown", "Emma Wilson"]
+            
+            // 80% chance of being a recognized customer, 20% new customer
+            let customerName: String
+            if Double.random(in: 0...1) < 0.8 {
+                customerName = existingCustomers.randomElement() ?? "John Doe"
+            } else {
+                customerName = "Customer \(Int.random(in: 1000...9999))"
+            }
+            
+            parent.authenticationResult = .success
+            parent.statusMessage = "Customer recognized: \(customerName)"
+            parent.showResult = true
+            parent.isScanning = false
+            
+            // Haptic feedback
+            let successFeedback = UINotificationFeedbackGenerator()
+            successFeedback.notificationOccurred(.success)
+            
+            // Complete after delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                self.parent.onCustomerRecognized(customerName)
+            }
+            
+            scanStartTime = nil
+            scanningFace = nil
+        }
+        
+        private func resetScan() {
+            scanStartTime = nil
+            parent.progress = 0.0
+            scanningFace = nil
+        }
+    }
+}
+
+protocol CustomerFaceAuthDelegate: AnyObject {
+    func didDetectCustomerFace(_ observation: VNFaceObservation)
+    func didLoseCustomerFace()
+}
+
+class RealCustomerFaceAuthViewController: UIViewController {
+    weak var delegate: CustomerFaceAuthDelegate?
+    var isScanning: Bool = true
+    
+    private var captureSession: AVCaptureSession!
+    private var previewLayer: AVCaptureVideoPreviewLayer!
+    private let videoDataOutput = AVCaptureVideoDataOutput()
+    private let videoDataOutputQueue = DispatchQueue(label: "CustomerVideoDataOutput", qos: .userInitiated, attributes: [], autoreleaseFrequency: .workItem)
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupCamera()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updatePreviewLayerFrame()
+    }
+    
+    private func updatePreviewLayerFrame() {
+        if let previewLayer = previewLayer {
+            previewLayer.frame = view.bounds
+        }
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        if captureSession?.isRunning == false {
+            DispatchQueue.global(qos: .background).async { [weak self] in
+                self?.captureSession?.startRunning()
+            }
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.updatePreviewLayerFrame()
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if captureSession?.isRunning == true {
+            captureSession?.stopRunning()
+        }
+    }
+    
+    private func setupCamera() {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            configureCameraSession()
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        self?.configureCameraSession()
+                    }
+                }
+            }
+        case .denied, .restricted:
+            print("Camera access denied or restricted")
+        @unknown default:
+            print("Unknown camera authorization status")
+        }
+    }
+    
+    private func configureCameraSession() {
+        #if targetEnvironment(simulator)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            let backgroundLayer = CALayer()
+            backgroundLayer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.3).cgColor
+            backgroundLayer.frame = self.view.bounds
+            self.view.layer.insertSublayer(backgroundLayer, at: 0)
+            
+            let label = UILabel()
+            label.text = "Customer Camera Preview\n(Simulator Mode)"
+            label.textAlignment = .center
+            label.numberOfLines = 0
+            label.textColor = .white
+            label.font = UIFont.systemFont(ofSize: 18, weight: .medium)
+            label.frame = self.view.bounds
+            self.view.addSubview(label)
+        }
+        return
+        #endif
+        
+        captureSession = AVCaptureSession()
+        captureSession.sessionPreset = .medium
+        
+        guard let frontCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) else {
+            print("Unable to access front camera")
+            return
+        }
+        
+        do {
+            let input = try AVCaptureDeviceInput(device: frontCamera)
+            
+            if captureSession.canAddInput(input) {
+                captureSession.addInput(input)
+            }
+            
+            videoDataOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA]
+            videoDataOutput.setSampleBufferDelegate(self, queue: videoDataOutputQueue)
+            
+            if captureSession.canAddOutput(videoDataOutput) {
+                captureSession.addOutput(videoDataOutput)
+            }
+            
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                
+                self.previewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
+                self.previewLayer?.videoGravity = .resizeAspectFill
+                self.previewLayer?.connection?.videoOrientation = self.getVideoOrientation()
+                self.previewLayer?.frame = self.view.bounds
+                
+                self.view.layer.insertSublayer(self.previewLayer!, at: 0)
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self.updatePreviewLayerFrame()
+                }
+            }
+            
+            DispatchQueue.global(qos: .background).async { [weak self] in
+                self?.captureSession?.startRunning()
+            }
+            
+        } catch {
+            print("Error setting up customer camera: \(error)")
+        }
+    }
+    
+    private func getVideoOrientation() -> AVCaptureVideoOrientation {
+        switch UIDevice.current.orientation {
+        case .portrait:
+            return .portrait
+        case .landscapeLeft:
+            return .landscapeRight
+        case .landscapeRight:
+            return .landscapeLeft
+        case .portraitUpsideDown:
+            return .portraitUpsideDown
+        default:
+            return .portrait
+        }
+    }
+}
+
+extension RealCustomerFaceAuthViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        guard isScanning else { return }
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        
+        let faceDetectionRequest = VNDetectFaceLandmarksRequest { [weak self] request, error in
+            guard let observations = request.results as? [VNFaceObservation], !observations.isEmpty else {
+                DispatchQueue.main.async {
+                    self?.delegate?.didLoseCustomerFace()
+                }
+                return
+            }
+            
+            let faceObservation = observations[0]
+            DispatchQueue.main.async {
+                self?.delegate?.didDetectCustomerFace(faceObservation)
+            }
+        }
+        
+        let imageRequestHandler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .leftMirrored, options: [:])
+        
+        try? imageRequestHandler.perform([faceDetectionRequest])
+    }
+}
+
+struct TransactionListView: View {
+    @ObservedObject var userManager: UserManager
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Text("Transactions")
+                        .font(.system(size: 28, weight: .bold, design: .default))
+                        .foregroundColor(.black)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.gray)
+                    }
+                }
+                .padding(.horizontal, 30)
+                .padding(.vertical, 20)
+                
+                // Transaction list
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(userManager.transactions) { transaction in
+                            TransactionRow(transaction: transaction)
+                        }
+                    }
+                    .padding(.horizontal, 30)
+                }
+            }
+            .background(Color.white)
+        }
+    }
+}
+
+struct WithdrawalView: View {
+    @ObservedObject var userManager: UserManager
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 30) {
+                // Header
+                HStack {
+                    Text("Withdrawals")
+                        .font(.system(size: 28, weight: .bold, design: .default))
+                        .foregroundColor(.black)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.gray)
+                    }
+                }
+                .padding(.horizontal, 30)
+                .padding(.top, 20)
+                
+                // Balance overview
+                VStack(spacing: 24) {
+                    FinancialCard(
+                        title: "Available Balance",
+                        value: "$\(String(format: "%.2f", userManager.totalBalance))",
+                        subtitle: "Ready for withdrawal",
+                        color: .primaryYellow,
+                        icon: "dollarsign.circle.fill"
+                    )
+                    
+                    HStack(spacing: 20) {
+                        FinancialCard(
+                            title: "This Month",
+                            value: "$\(String(format: "%.2f", userManager.totalBalance * 0.3))",
+                            subtitle: "Earned",
+                            color: .green,
+                            icon: "chart.line.uptrend.xyaxis"
+                        )
+                        
+                        FinancialCard(
+                            title: "Total Withdrawn",
+                            value: "$0.00",
+                            subtitle: "All time",
+                            color: .blue,
+                            icon: "arrow.down.circle.fill"
+                        )
+                    }
+                }
+                .padding(.horizontal, 30)
+                
+                Spacer()
+                
+                // Withdraw button
+                Button(action: {
+                    // Handle withdrawal logic
+                }) {
+                    HStack(spacing: 16) {
+                        Image(systemName: "banknote.fill")
+                            .font(.system(size: 24, weight: .bold))
+                        Text("Request Withdrawal")
+                            .font(.system(size: 20, weight: .bold, design: .default))
+                    }
+                    .foregroundColor(.black)
+                    .frame(width: 280, height: 60)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color.primaryYellow)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.black, lineWidth: 3)
+                    )
+                    .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+                }
+                .padding(.bottom, 60)
+            }
+            .background(Color.white)
+        }
+    }
+}
+
+struct TransactionRow: View {
+    let transaction: Transaction
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Customer avatar
+            Circle()
+                .fill(Color.primaryYellow.opacity(0.2))
+                .frame(width: 50, height: 50)
+                .overlay(
+                    Text(String(transaction.customerName.prefix(1)))
+                        .font(.system(size: 20, weight: .bold, design: .default))
+                        .foregroundColor(.primaryYellow)
+                )
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(transaction.customerName)
+                    .font(.system(size: 16, weight: .bold, design: .default))
+                    .foregroundColor(.black)
+                
+                Text(formatDate(transaction.date))
+                    .font(.system(size: 14, weight: .medium, design: .default))
+                    .foregroundColor(.gray)
+            }
+            
+            Spacer()
+            
+            Text("$\(String(format: "%.2f", transaction.amount))")
+                .font(.system(size: 18, weight: .bold, design: .default))
+                .foregroundColor(.black)
+        }
         .padding()
         .background(Color.white)
-        .cornerRadius(15)
-        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
-        .opacity(isComingSoon ? 0.7 : 1.0)
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return formatter.string(from: date)
+    }
+}
+
+struct PaymentConfirmationView: View {
+    let amount: String
+    let customer: String
+    let onConfirm: () -> Void
+    let onCancel: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 60) {
+            VStack(spacing: 30) {
+                Image(systemName: "person.circle.fill")
+                    .font(.system(size: 100, weight: .bold))
+                    .foregroundColor(.primaryYellow)
+                
+                VStack(spacing: 16) {
+                    Text("Customer Identified")
+                        .font(.system(size: 36, weight: .bold, design: .default))
+                        .foregroundColor(.black)
+                    
+                    Text(customer)
+                        .font(.system(size: 28, weight: .bold, design: .default))
+                        .foregroundColor(.black)
+                }
+                
+                VStack(spacing: 8) {
+                    Text("Payment Amount")
+                        .font(.system(size: 18, weight: .medium, design: .default))
+                        .foregroundColor(.gray)
+                    
+                    Text("$\(amount)")
+                        .font(.system(size: 48, weight: .bold, design: .default))
+                        .foregroundColor(.primaryYellow)
+                }
+            }
+            
+            VStack(spacing: 20) {
+                Text("Customer: Please confirm this payment")
+                    .font(.system(size: 20, weight: .medium, design: .default))
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                
+                HStack(spacing: 40) {
+                    Button(action: onCancel) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 20, weight: .bold))
+                            Text("Cancel")
+                                .font(.system(size: 20, weight: .bold, design: .default))
+                        }
+                        .foregroundColor(.red)
+                        .frame(width: 160, height: 70)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.red.opacity(0.1))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.red, lineWidth: 3)
+                        )
+                    }
+                    
+                    Button(action: onConfirm) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 20, weight: .bold))
+                            Text("Confirm")
+                                .font(.system(size: 20, weight: .bold, design: .default))
+                        }
+                        .foregroundColor(.black)
+                        .frame(width: 160, height: 70)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.primaryYellow)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.black, lineWidth: 3)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct ProcessingPaymentView: View {
+    let onComplete: () -> Void
+    @State private var rotationAngle: Double = 0
+    
+    var body: some View {
+        VStack(spacing: 50) {
+            Image(systemName: "creditcard.fill")
+                .font(.system(size: 100, weight: .bold))
+                .foregroundColor(.primaryYellow)
+                .rotationEffect(.degrees(rotationAngle))
+                .animation(.linear(duration: 1.5).repeatForever(autoreverses: false), value: rotationAngle)
+            
+            VStack(spacing: 20) {
+                Text("Processing Payment")
+                    .font(.system(size: 36, weight: .bold, design: .default))
+                    .foregroundColor(.black)
+                
+                Text("Please wait...")
+                    .font(.system(size: 20, weight: .medium, design: .default))
+                    .foregroundColor(.gray)
+                
+                // Progress dots
+                HStack(spacing: 8) {
+                    ForEach(0..<3) { index in
+                        Circle()
+                            .fill(Color.primaryYellow)
+                            .frame(width: 12, height: 12)
+                            .scaleEffect(rotationAngle > Double(index * 120) ? 1.0 : 0.5)
+                            .animation(.easeInOut(duration: 0.6).repeatForever(), value: rotationAngle)
+                    }
+                }
+            }
+        }
+        .onAppear {
+            rotationAngle = 360
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                onComplete()
+            }
+        }
+    }
+}
+
+struct PaymentCompletedView: View {
+    let onNewPayment: () -> Void
+    @State private var showCheckmark = false
+    
+    var body: some View {
+        VStack(spacing: 60) {
+            VStack(spacing: 30) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 120, weight: .bold))
+                    .foregroundColor(.green)
+                    .scaleEffect(showCheckmark ? 1.0 : 0.3)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8), value: showCheckmark)
+                
+                VStack(spacing: 20) {
+                    Text("Payment Successful!")
+                        .font(.system(size: 40, weight: .bold, design: .default))
+                        .foregroundColor(.black)
+                    
+                    Text("Transaction completed successfully")
+                        .font(.system(size: 20, weight: .medium, design: .default))
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                }
+            }
+            
+            Button(action: onNewPayment) {
+                HStack(spacing: 16) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 24, weight: .bold))
+                    Text("New Payment")
+                        .font(.system(size: 24, weight: .bold, design: .default))
+                }
+                .foregroundColor(.black)
+                .frame(width: 220, height: 70)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.primaryYellow)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.black, lineWidth: 3)
+                )
+                .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+            }
+        }
+        .onAppear {
+            showCheckmark = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                onNewPayment()
+            }
+        }
     }
 }
 
