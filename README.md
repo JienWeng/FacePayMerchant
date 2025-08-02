@@ -1,4 +1,6 @@
-# 🧠 FacePay – AI-Powered Facial Recognition Payment Platform
+# 🚀 FacePay – Seamless Face-Based Payment System for MSMEs
+
+"Pay with just your face. No phone. No card. No hassle."
 
 ![FacePay Overview](https://raw.githubusercontent.com/xx-3-xx/FacePayMobileApp/refs/heads/main/face-pay-mvp/public/images/facePay.jpg)
 
@@ -13,6 +15,17 @@ A contactless payment system using on-device facial recognition — secure, priv
 
 ---
 
+## 📌 Problem Statement
+
+Current MSME payment methods are not seamless enough, especially in low-tech and high-traffic environments.
+
+- MSMEs struggle with onboarding to digital payment ecosystems.
+- QR and NFC payments require smartphones, apps, stable internet, and customer action.
+- Elderly, low-income users, or those with limited digital access are excluded.
+- Payment queues and transaction friction reduce efficiency.
+
+---
+
 ## 🔥 Why It’s Critical
 
 FacePay solves a pressing need for **secure, touchless, and frictionless payments** by enabling **on-device facial recognition** that is private by design. Built for **MSMEs**, it brings biometric payment tech to businesses of any size.
@@ -21,31 +34,10 @@ FacePay solves a pressing need for **secure, touchless, and frictionless payment
 
 ## ⚙️ How It Works
 
-- 🧾 **Merchant Web Portal** – MSMEs register, manage profiles, and receive payments
-- 📱 **Mobile App** – Consumers authenticate and pay using facial biometrics
-- 🔒 **All facial data stays on-device**; no cloud-based image storage
-
----
-
-## 🧱 Tech Stack
-
-### Merchant Web Portal
-
-| Layer         | Technology                              |
-|---------------|------------------------------------------|
-| Frontend      | Next.js, Tailwind CSS                    |
-| Backend       | Flask (Python), Firebase                 |
-| AI Models     | Python, MediaPipe, ResNet100             |
-| Deployment    | Docker, AWS                              |
-
-### Mobile App (Consumer)
-
-| Layer         | Technology                              |
-|---------------|------------------------------------------|
-| Frontend      | Next.js, React, Framer Motion            |
-| AI & CV       | TensorFlow.js, MediaPipe, FaceMesh       |
-| Webcam Access | `react-webcam`                           |
-| Local SSL     | `mkcert` for dev HTTPS                   |
+- 🧾 **Merchant Side** 
+      - With POS terminal -- face pay api for accepting face pay
+      - Without POS terminal -- own tablet/phone for accepting face pay
+- 📱 **Consumer Side** – No extra app needed ! Bank integrating face pay in their app 
 
 ---
 
@@ -84,15 +76,6 @@ A **tiered subscription model** to support MSMEs at every growth stage:
 
 ---
 
-## 📈 ROI – Return on Investment
-
-- ⏱ Cut checkout time by up to **70%**
-- 🔒 Reduce fraud with biometric validation
-- 🧠 Enable repeat payments with ease
-- 📉 Lower staff dependency and operational costs
-
----
-
 ## 🛣 Roadmap
 
 - ✅ v1.0 – MVP with local face match & payment interface
@@ -114,11 +97,11 @@ Refer a friend — you both get **RM150 credit** after setup.
 
 ## 🏆 Why It’s a Win
 
-- ⚡ Fast Checkout – biometric match in seconds
-- 🔐 Privacy by Design – zero facial data uploaded
-- 💸 MSME Ready – affordable and scalable
-- 🌐 Web & Mobile – seamless integration
-- 📊 Scalable – supports retail, F&B, and services
+- ⚡ Solves Real MSME Pain Points
+- 🔐 Inclusive, Fast, and App-Free
+- 💸 Built for Malaysia, Scalable Globally
+- 🌐 Security First, Privacy Built-In
+- 📊 Visionary but Practical
 
 ---
 
