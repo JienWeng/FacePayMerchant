@@ -98,32 +98,31 @@ A: The system highlights multiple faces; the merchant confirms the correct one b
 ### 🧾 Solution: FacePay
 A dual-platform facial recognition payment system:
 
-#### 🧾 Merchant Side
-1.⁠ ⁠Soft POS (budget-friendly)
-Merchants install the FacePay app on any Android phone/tablet.
+### 🧾 Merchant Side
 
-Steps:
+#### 1. **Soft POS** *(Budget-Friendly Option)*  
+Merchants install the **FacePay** app on any Android phone or tablet.
 
-Enter amount
+**Steps:**
+- 💰 Enter transaction amount  
+- 📷 Point camera at customer  
+- 🧠 System recognizes customer → deducts from **linked DuitNow account**  
+- ✅ Merchant confirms → transaction completes
 
-Point camera at customer
+---
 
-System recognizes customer → deducts from linked DuitNow account
+#### 2. **POS Terminal Integration**  
+FacePay API is **embedded into existing smart POS terminals**.
 
-Merchant confirms → transaction completes
+- Merchants use it just like a regular POS — but with **face scanning instead of cards or QR**.
 
-2.⁠ ⁠POS Terminal Integration
-FacePay API is embedded into existing smart POS terminals.
+---
 
-Merchants use it like regular POS — but with face scanning.
+### 🙋‍♂️ Consumer Side
 
-#### Consumer Side
-No extra app required.
+- **No extra app required**
+- Users activate FacePay by registering their face:
+  - During bank card sign-up  
+  - Or via their **bank’s app** or the **FacePay portal**
+- Linked directly to their **DuitNow or bank account**
 
-Users activate FacePay by registering their face:
-
-During bank card signup
-
-Or via their bank’s app / FacePay portal
-
-Linked directly to DuitNow or bank account.
