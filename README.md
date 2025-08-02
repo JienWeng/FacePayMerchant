@@ -18,11 +18,9 @@ A contactless payment system using on-device facial recognition — secure, priv
 
 ## 📌 Problem Statement
 
-Current MSME payment methods are not seamless enough, especially in low-tech and high-traffic environments.
-
-- MSMEs struggle with onboarding to digital payment ecosystems.
-- QR and NFC payments require smartphones, apps, stable internet, and customer action.
-- Elderly, low-income users, or those with limited digital access are excluded.
+- Current Digital Payment Methods Are Not Seamless Enough for MSMEs.
+- MSME Onboarding into Digital Ecosystems Remains a Barrier.
+- QR and NFC payments require smartphones, apps, and customer action.
 - Payment queues and transaction friction reduce efficiency.
 
 ---
