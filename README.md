@@ -10,8 +10,8 @@ A contactless payment system using on-device facial recognition — secure, priv
 
 ## 🔗 Important Links
 
-- [🛒 FacePay Merchant Web Portal](https://github.com/thanir03/facepay-msme)
-- [📱 FacePay Mobile App (Consumer)](https://github.com/xx-3-xx/FacePayMobileApp)
+- [🛒 FacePay Merchant App](https://github.com/JienWeng/FacePayMerchant/)
+- [📱 FacePay Pitch Deck](https://github.com/JienWeng/FacePayMerchant/blob/main/Payhack2025-FacePay_pitchkey.pdf)
 
 ---
 
@@ -37,63 +37,52 @@ FacePay solves a pressing need for **secure, touchless, and frictionless payment
 - 🧾 **Merchant Side** 
       - With POS terminal -- face pay api for accepting face pay
       - Without POS terminal -- own tablet/phone for accepting face pay
-- 📱 **Consumer Side** – No extra app needed ! Bank integrating face pay in their app 
+- 📱 **Consumer Side** 
+      – No extra app needed ! Bank integrating face pay in their app 
 
 ---
 
 ## ✨ Key Features
 
-### 📱 Consumer App
+### 📱 Merchant App
+| Feature                        | Description                                                  |
+| ------------------------------ | ------------------------------------------------------------ |
+| 🔐 Secure Facial Recognition   | Fast, on-device or cloud-based face matching with encryption |
+| 📶 Offline-First Mode          | Queue transactions offline and sync when back online         |
+| 👀 Liveness Detection          | Anti-spoofing: blink, nod, or gesture validation             |
+| 🧭 Location-Aware Matching     | Prioritizes nearby customers in crowded areas                |
+| 🔁 Merchant Confirmation Layer | Ensures correct face selection before payment                |
+| 🛡️ PDPA-Compliant             | Encrypted embeddings, no raw face images stored              |
+| 🔄 Fallback Methods            | PIN, phone number, or OTP fallback if face scan fails        |
+| 🧓 Inclusive UX                | Designed for elderly, disabled, and non-smartphone users     |
 
-| Feature                    | Description                                          |
-|----------------------------|------------------------------------------------------|
-| Face Recognition           | Fast, local facial match using MediaPipe + TF.js    |
-| 3D Card UI                 | Interactive card design using `framer-motion`       |
-| Local Data Storage         | Saves preferences without external calls            |
-| Privacy-First Architecture| No facial images leave the device                   |
+## 💬 Frequently Asked Questions (FAQs)
+Q: What if a customer’s face changes?
+A: FacePay allows re-registration and uses fallback options like PIN or phone number.
 
-### 🧾 Merchant Portal
+Q: Can FacePay work offline?
+A: Yes. Transactions are queued locally and synced when internet is restored.
 
-| Feature                    | Description                                          |
-|----------------------------|------------------------------------------------------|
-| Merchant Onboarding        | Easy registration & setup                           |
-| Real-Time Transactions     | View face-auth payments in real-time                |
-| Analytics Dashboard        | Track volumes, history, and referral data           |
+Q: Is this secure?
+A: Yes. We use encrypted embeddings, liveness checks, and PDPA-compliant practices.
 
----
+Q: What if multiple users are nearby?
+A: The system highlights multiple faces; the merchant confirms the correct one before proceeding.
 
 ## 💼 Business Model
+- [FacePay Business Model](https://github.com/JienWeng/FacePayMerchant/blob/main/business-model.png)
 
-A **tiered subscription model** to support MSMEs at every growth stage:
-
-| Plan    | Monthly Fee | Free Transaction Volume | Excess Fee |
-|---------|-------------|--------------------------|------------|
-| Starter | RM39        | RM10,000                 | 2.0%       |
-| Growth  | RM99        | RM30,000                 | 2.0%       |
-| Pro     | RM299       | RM100,000                | 2.0%       |
-
-> 💳 Flat 2.0% fee for usage beyond quota.
 
 ---
 
 ## 🛣 Roadmap
 
-- ✅ v1.0 – MVP with local face match & payment interface
-- 🔜 v1.1 – Anti-spoofing (liveness detection)
-- 🔜 v1.2 – Merchant analytics + real-time insights
-- 🔜 v2.0 – Cross-device sync, multi-merchant access
-- 🔐 Future – Decentralized identity with blockchain
----
+- ✅ Bank pilot partnership (DuitNow or digital banks)
+- ✅ Add web-based registration portal for face linking
+- 🔄 Loyalty system via face (returning customer tracking)
+- 🏦 Integration with financial assistance for MSMEs
+- 🔧 POS hardware partner pilot (e.g., StoreHub, Qashier)
 
-  <img width="1920" height="1080" alt="Green and Black Modern Roadmap Timeline Brainstorm" src="https://github.com/user-attachments/assets/c35096ac-b6a2-4ea3-b031-c680e8e271e7" />
-  
----
-
-## 🤝 Referral Program
-
-Refer a friend — you both get **RM150 credit** after setup.
-
----
 
 ## 🏆 Why It’s a Win
 
@@ -105,24 +94,37 @@ Refer a friend — you both get **RM150 credit** after setup.
 
 ---
 
-## 🚀 Get Started
+## Business Flow
 
-### 🧾 FacePay Merchant Web Portal
+### 🧾 Solution: FacePay
+A dual-platform facial recognition payment system:
 
-```bash
-git clone https://github.com/thanir03/facepay-msme
-cd facepay-msme
-pnpm install
-pnpm dev
-# Visit https://localhost:4000
-```
+#### 🧾 Merchant Side
+1.⁠ ⁠Soft POS (budget-friendly)
+Merchants install the FacePay app on any Android phone/tablet.
 
-### 📱 FacePay Mobile App (Consumer)
+Steps:
 
-```bash
-git clone https://github.com/xx-3-xx/FacePayMobileApp
-cd FacePayMobileApp
-npm install
-npm run dev
-# Visit https://localhost:3000
-```
+Enter amount
+
+Point camera at customer
+
+System recognizes customer → deducts from linked DuitNow account
+
+Merchant confirms → transaction completes
+
+2.⁠ ⁠POS Terminal Integration
+FacePay API is embedded into existing smart POS terminals.
+
+Merchants use it like regular POS — but with face scanning.
+
+#### Consumer Side
+No extra app required.
+
+Users activate FacePay by registering their face:
+
+During bank card signup
+
+Or via their bank’s app / FacePay portal
+
+Linked directly to DuitNow or bank account.
