@@ -33,11 +33,21 @@ FacePay solves a pressing need for **secure, touchless, and frictionless payment
 
 ## ⚙️ How It Works
 
-- 🧾 **Merchant Side** 
-      - With POS terminal -- face pay api for accepting face pay
-      - Without POS terminal -- own tablet/phone for accepting face pay
-- 📱 **Consumer Side** 
-      – No extra app needed ! Bank integrating face pay in their app 
+### 🧾 Merchant Side
+
+- **With POS Terminal**  
+  FacePay API is embedded into existing smart POS terminals for seamless face-based payment.
+
+- **Without POS Terminal**  
+  Merchants can use their **own Android tablet or phone** with the FacePay app to accept payments via face scan.
+
+---
+
+### 📱 Consumer Side
+
+- **No extra app needed!**  
+  FacePay is integrated directly into participating **bank apps**, making activation and usage effortless for users.
+
 
 ---
 
