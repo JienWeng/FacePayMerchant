@@ -71,7 +71,7 @@ Q: What if multiple users are nearby?
 A: The system highlights multiple faces; the merchant confirms the correct one before proceeding.
 
 ## 💼 Business Model
-![FacePay Business Model]((https://github.com/JienWeng/FacePayMerchant/blob/main/business-model.png)
+![FacePay Business Model](https://github.com/JienWeng/FacePayMerchant/raw/main/business-model.png)
 ---
 
 ## 🛣 Roadmap
