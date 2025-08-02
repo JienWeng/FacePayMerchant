@@ -380,33 +380,31 @@ struct AmountEntryView: View {
     
     var body: some View {
         VStack(spacing: 80) {
-            VStack(spacing: 40) {
-                Text("Enter Amount")
-                    .font(.system(size: 40, weight: .bold, design: .default))
-                    .foregroundColor(.black)
-                
-                // Amount display with closer $ sign
-                VStack(spacing: 20) {
-                    HStack(alignment: .bottom, spacing: 4) {
-                        Text("$")
-                            .font(.system(size: 48, weight: .bold, design: .default))
-                            .foregroundColor(.primaryYellow)
-                        
-                        TextField("0", text: $amount)
-                            .font(.system(size: 64, weight: .bold, design: .default))
-                            .foregroundColor(.black)
-                            .keyboardType(.decimalPad)
-                            .focused($isAmountFocused)
-                            .multilineTextAlignment(.leading)
-                            .frame(minWidth: 200)
-                    }
-                    
-                    Rectangle()
-                        .fill(Color.primaryYellow)
-                        .frame(height: 4)
-                        .frame(maxWidth: 400)
+            VStack(spacing: 20) {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("$")
+                        .font(.system(size: 48, weight: .bold, design: .default))
+                        .foregroundColor(.primaryYellow)
+
+                    TextField("0", text: $amount)
+                        .font(.system(size: 64, weight: .bold, design: .default))
+                        .foregroundColor(.black)
+                        .keyboardType(.decimalPad)
+                        .focused($isAmountFocused)
+                        .multilineTextAlignment(.leading)
+                        .frame(minWidth: 100)
                 }
+                .fixedSize() // 👈 Key to keep the HStack as small as needed
+                .frame(maxWidth: .infinity, alignment: .center) // 👈 Center the whole unit
+
+                Rectangle()
+                    .fill(Color.primaryYellow)
+                    .frame(height: 4)
+                    .frame(maxWidth: 400)
             }
+            .padding()
+
+
             
             // Action buttons
             HStack(spacing: 30) {
@@ -672,7 +670,7 @@ struct RealCustomerFaceAuthController: UIViewControllerRepresentable {
         
         private func completeScan(_ observation: VNFaceObservation) {
             // For demo purposes, simulate customer recognition
-            let existingCustomers = ["Alice Johnson", "Bob Smith", "Carol Williams", "David Brown", "Emma Wilson"]
+            let existingCustomers = ["Low Liana", "Jien Weng", "Liang Ke Ying", "Thanirmalai"]
             
             // 80% chance of being a recognized customer, 20% new customer
             let customerName: String

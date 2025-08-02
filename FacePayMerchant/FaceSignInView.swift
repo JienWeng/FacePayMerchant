@@ -261,7 +261,7 @@ struct FaceAuthController: UIViewControllerRepresentable {
             let currentFeatures = FaceFeatures(observation: observation)
             let similarity = parent.faceDataManager.compareFaces(currentFeatures)
             
-            let threshold: Float = 0.75 // Adjust based on security requirements
+            let threshold: Float = 0.25 // Adjust based on security requirements
             
             if similarity >= threshold {
                 parent.authenticationResult = .success
